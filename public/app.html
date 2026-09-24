@@ -2,138 +2,158 @@
 <html lang="uz">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#0F172A">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#F5F6F9">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>EduFocus — Mobil Ilovani O'rnatish</title>
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>EduFocus — Mobil Ilovani Yuklash</title>
   <link rel="manifest" href="/manifest.json">
   <link rel="apple-touch-icon" href="/img/icon-192.png">
   <link rel="icon" href="/img/icon-192.png">
-  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/mobile-app.css">
   <style>
-    .app-hero {
-      text-align: center;
-      padding: 40px 20px;
-      max-width: 520px;
-      margin: 0 auto;
-    }
-    .app-logo-badge {
-      width: 88px;
-      height: 88px;
-      border-radius: 24px;
-      background: linear-gradient(135deg, #1E293B, #0F172A);
-      border: 2px solid var(--blue-500);
+    .app-icon-large {
+      width: 76px;
+      height: 76px;
+      border-radius: 22px;
+      background: var(--app-lime);
+      color: var(--app-dark);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 44px;
-      margin: 0 auto 20px;
-      box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
-    }
-    .guide-card {
-      background: var(--bg-secondary);
-      border: 1px solid var(--border-light);
-      border-radius: var(--radius-xl);
-      padding: 20px;
-      margin-bottom: 16px;
-      text-align: left;
-    }
-    .guide-step {
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-      margin-bottom: 12px;
-    }
-    .guide-step:last-child {
-      margin-bottom: 0;
-    }
-    .guide-num {
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      background: var(--blue-500);
-      color: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 12px;
-      font-weight: 700;
-      flex-shrink: 0;
+      font-size: 38px;
+      margin: 0 auto 16px;
+      box-shadow: 0 12px 30px rgba(212, 246, 55, 0.45);
     }
   </style>
 </head>
-<body>
-  <div class="app-hero">
-    <div class="app-logo-badge">🎓</div>
-    <h1 style="font-size: 26px; font-weight: 800; margin-bottom: 8px">EduFocus Mobil Ilovasi</h1>
-    <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 24px">
-      Dars vaqtida diqqatni jamlash va testlarni topshirish uchun qulay rasmiy ilova.
-    </p>
+<body class="mobile-theme">
+  <div class="mobile-app-shell">
 
-    <!-- 1-Click Install Button -->
-    <button type="button" id="main-install-btn" class="btn btn-primary btn-lg" style="width: 100%; margin-bottom: 24px; justify-content: center; padding: 16px; font-size: 16px" onclick="triggerInstall()">
-      📲 Ilovani Telefonga O'rnatish
-    </button>
+    <!-- Phone Top Status Bar (iOS style 9:41) -->
+    <div class="mobile-status-bar">
+      <span id="top-status-time">09:41</span>
+      <div class="status-bar-icons">
+        <span>📶</span>
+        <span>5G</span>
+        <span>🔋</span>
+      </div>
+    </div>
 
-    <!-- Enter Class Form -->
-    <div class="card" style="margin-bottom: 24px; text-align: left">
-      <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 12px">🔑 Darsga Kirish</h3>
+    <!-- Header -->
+    <div class="app-header">
+      <div class="user-greeting-wrap">
+        <span class="user-greeting-label">Mobil Platforma</span>
+        <h2 class="user-greeting-name">EduFocus App</h2>
+      </div>
+      <a href="/student.html" class="header-action-btn" title="Darsga o'tish">
+        <span>🎓</span>
+      </a>
+    </div>
+
+    <!-- Hero Card (Ronas IT style) -->
+    <div class="hero-balance-card" style="text-align: center">
+      <div class="app-icon-large">⚡</div>
+      <h1 style="font-size: 24px; font-weight: 800; color: var(--app-dark); margin-bottom: 6px; letter-spacing: -0.5px">
+        EduFocus Mobil Ilova
+      </h1>
+      <p style="font-size: 13px; color: var(--app-text-secondary); line-height: 1.5; margin-bottom: 20px">
+        Dars vaqtida diqqatni jamlash, jonli testlarni topshirish va interaktiv materiallarni ko'rish uchun maxsus ilova.
+      </p>
+
+      <button type="button" id="main-install-btn" class="mobile-btn-lime" onclick="triggerInstall()" style="font-size: 16px">
+        <span>📲</span> Telefonga O'rnatish (1-klik)
+      </button>
+    </div>
+
+    <!-- Quick Session Code Form -->
+    <div class="hero-balance-card" style="margin-top: -6px">
+      <div class="hero-balance-label-row">
+        <span class="hero-balance-label">DARSGA TEZKOR KIRISH</span>
+        <span style="font-size: 11px; background: #ECFDF5; color: #10B981; padding: 3px 8px; border-radius: 9999px; font-weight: 700">Faol</span>
+      </div>
       <form onsubmit="goToClass(event)">
-        <div class="form-group" style="margin-bottom: 12px">
-          <input type="text" id="class-code-input" class="form-input" placeholder="Ustoz bergan 8 xonali kod (masalan: 44275fc5)" required>
-        </div>
-        <button type="submit" class="btn btn-success" style="width: 100%; justify-content: center">
+        <input type="text" id="class-code-input" class="mobile-input-field" placeholder="8 xonali dars kodi (masalan: 44275fc5)" required>
+        <button type="submit" class="mobile-btn-dark">
           Darsga Kirish 🚀
         </button>
       </form>
     </div>
 
-    <!-- Guides -->
-    <div class="guide-card">
-      <h4 style="font-size: 15px; font-weight: 700; color: var(--green-400); margin-bottom: 14px; display: flex; align-items: center; gap: 8px">
-        <span>🤖</span> Android (Chrome) uchun o'rnatish:
-      </h4>
-      <div class="guide-step">
-        <span class="guide-num">1</span>
-        <span style="font-size: 13px; color: var(--text-secondary)">Chrome brauzerining yuqori o'ng burchagidagi <strong>⋮ (3 nuqta)</strong> menyusini bosing.</span>
+    <!-- Instructions Carousel / Cards -->
+    <div class="section-title-row">
+      <h3 class="section-title">O'rnatish Qo'llanmasi</h3>
+    </div>
+
+    <div class="action-list-card">
+      <!-- Android Step -->
+      <div class="action-row-item" style="cursor: default">
+        <div class="action-icon-box" style="background: #ECFDF5; color: #059669; font-size: 24px">🤖</div>
+        <div class="action-content-wrap">
+          <div class="action-item-title">Android (Google Chrome)</div>
+          <div class="action-item-subtitle" style="line-height: 1.4; margin-top: 4px">
+            1. Brauzerning yuqori o'ng burchagidagi <strong>⋮ (3 nuqta)</strong> menyusini bosing.<br>
+            2. <strong>"Ilovani o'rnatish"</strong> yoki <strong>"Bosh ekranga qo'shish"</strong> ni tanlang.
+          </div>
+        </div>
       </div>
-      <div class="guide-step">
-        <span class="guide-num">2</span>
-        <span style="font-size: 13px; color: var(--text-secondary)">Menyudan <strong>"Ilovani o'rnatish"</strong> (yoki "Bosh ekranga qo'shish") tugmasini bosing.</span>
+
+      <!-- iOS Step -->
+      <div class="action-row-item" style="cursor: default">
+        <div class="action-icon-box" style="background: #EFF6FF; color: #2563EB; font-size: 24px">🍎</div>
+        <div class="action-content-wrap">
+          <div class="action-item-title">iPhone (Safari)</div>
+          <div class="action-item-subtitle" style="line-height: 1.4; margin-top: 4px">
+            1. Pastdagi <strong>⎋ (Ulashish / Share)</strong> belgisini bosing.<br>
+            2. Ro'yxatdan <strong>"Bosh ekranga qo'shish" (Add to Home Screen)</strong> ni tanlang.
+          </div>
+        </div>
       </div>
-      <div class="guide-step">
-        <span class="guide-num">3</span>
-        <span style="font-size: 13px; color: var(--text-secondary)">Telefonda xuddi ilovadek paydo bo'ladi va brauzersiz ochiladi!</span>
+
+      <!-- Web APK / Desktop Step -->
+      <div class="action-row-item" style="cursor: default">
+        <div class="action-icon-box" style="background: #FEF3C7; color: #D97706; font-size: 24px">⚡</div>
+        <div class="action-content-wrap">
+          <div class="action-item-title">Hech qanday og'irliksiz</div>
+          <div class="action-item-subtitle" style="line-height: 1.4; margin-top: 4px">
+            Xotiradan joy egallamaydi, tezkor ochiladi va to'liq oflayn ishlaydi.
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="guide-card">
-      <h4 style="font-size: 15px; font-weight: 700; color: var(--blue-400); margin-bottom: 14px; display: flex; align-items: center; gap: 8px">
-        <span>🍎</span> iPhone (Safari) uchun o'rnatish:
-      </h4>
-      <div class="guide-step">
-        <span class="guide-num">1</span>
-        <span style="font-size: 13px; color: var(--text-secondary)">Safari brauzerining pastki qismidagi <strong>⎋ (Ulashish / Share)</strong> belgisini bosing.</span>
-      </div>
-      <div class="guide-step">
-        <span class="guide-num">2</span>
-        <span style="font-size: 13px; color: var(--text-secondary)">Pastga siljitib, <strong>"Bosh ekranga qo'shish" (Add to Home Screen)</strong> tugmasini bosing.</span>
-      </div>
-      <div class="guide-step">
-        <span class="guide-num">3</span>
-        <span style="font-size: 13px; color: var(--text-secondary)">Bosh ekranda to'liq ekranli ilova sifatida ochiladi!</span>
-      </div>
-    </div>
-
-    <div style="margin-top: 20px">
-      <a href="/" style="color: var(--text-muted); font-size: 13px; text-decoration: none">
-        🏠 Bosh sahifaga qaytish
+    <!-- Floating Bottom Navigation Bar -->
+    <div class="mobile-bottom-nav">
+      <a href="/student.html" class="nav-tab-btn" style="text-decoration: none">
+        <span class="nav-tab-icon">🎓</span>
+        <span class="nav-tab-label">O'quvchi</span>
+      </a>
+      <a href="/app.html" class="nav-tab-btn active" style="text-decoration: none">
+        <span class="nav-tab-icon">📲</span>
+        <span class="nav-tab-label">Yuklash</span>
+      </a>
+      <a href="/dashboard.html" class="nav-tab-btn" style="text-decoration: none">
+        <span class="nav-tab-icon">📊</span>
+        <span class="nav-tab-label">Ustoz</span>
+      </a>
+      <a href="/" class="nav-tab-btn" style="text-decoration: none">
+        <span class="nav-tab-icon">🏠</span>
+        <span class="nav-tab-label">Bosh Sahifa</span>
       </a>
     </div>
+
   </div>
 
   <script>
+    function updateClock() {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('uz', { hour: '2-digit', minute: '2-digit' });
+      const el = document.getElementById('top-status-time');
+      if (el) el.textContent = timeStr;
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js').catch(() => {});
@@ -145,7 +165,7 @@
       e.preventDefault();
       deferredPrompt = e;
       const btn = document.getElementById('main-install-btn');
-      if (btn) btn.textContent = '🚀 Hoziroq O\'rnatish (1-klik)';
+      if (btn) btn.innerHTML = '<span>🚀</span> Hoziroq O\'rnatish (1-klik)';
     });
 
     function triggerInstall() {
@@ -155,7 +175,7 @@
           deferredPrompt = null;
         });
       } else {
-        alert('Ilovani o\'rnatish uchun brauzeringizning 3 nuqta (⋮) yoki Ulashish (Share) menyusi orqali "Ilovani o\'rnatish" yoki "Bosh ekranga qo\'shish" tugmasini bosing.');
+        alert('Ilovani telefoningizga o\'rnatish uchun brauzeringizning 3 nuqta (⋮) yoki Ulashish (Share) menyusi orqali "Ilovani o\'rnatish" yoki "Bosh ekranga qo\'shish" tugmasini bosing.');
       }
     }
 

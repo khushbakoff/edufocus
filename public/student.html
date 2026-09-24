@@ -2,225 +2,388 @@
 <html lang="uz">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="description" content="EduFocus - Darsga qo'shilish">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="description" content="EduFocus - Darsga qo'shilish va mobil ilova">
+  <meta name="theme-color" content="#F5F6F9">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>EduFocus — Darsga qo'shilish</title>
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>EduFocus — Mobil Darslik</title>
   <link rel="manifest" href="/manifest.json">
-  <meta name="theme-color" content="#0F172A">
   <link rel="apple-touch-icon" href="/img/icon-192.png">
-  <link rel="stylesheet" href="/css/style.css">
   <link rel="icon" href="/img/icon-192.png">
+  <link rel="stylesheet" href="/css/mobile-app.css">
   <script src="/socket.io/socket.io.js"></script>
   <style>
-    /* Prevent pull-to-refresh */
     html, body {
       overscroll-behavior: none;
-      overflow: hidden;
-      touch-action: none;
+      touch-action: pan-y;
     }
   </style>
 </head>
-<body>
-  <!-- ======================== -->
-  <!-- SCREEN 1: JOIN FORM -->
-  <!-- ======================== -->
-  <div id="screen-join" class="student-page">
-    <div class="student-card">
-      <!-- App Install Banner (Always Visible) -->
-      <div style="background: rgba(59, 130, 246, 0.12); border: 1px solid rgba(59, 130, 246, 0.35); border-radius: var(--radius-lg); padding: 12px 14px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: var(--transition)" onclick="triggerPWAInstall()" id="top-install-banner">
-        <span style="font-size: 24px">📲</span>
-        <div style="flex: 1; text-align: left">
-          <div style="font-weight: 700; font-size: 14px; color: var(--blue-400)">EduFocus Ilovasini O'rnatish</div>
-          <div style="font-size: 11px; color: var(--text-muted)">Telefonga mustaqil ilova qilib yuklash</div>
+<body class="mobile-theme">
+  <div class="mobile-app-shell">
+    
+    <!-- Phone Top Status Bar (iOS style 9:41) -->
+    <div class="mobile-status-bar">
+      <span id="top-status-time">09:41</span>
+      <div class="status-bar-icons">
+        <span>📶</span>
+        <span>5G</span>
+        <span>🔋</span>
+      </div>
+    </div>
+
+    <!-- App Header (Good morning, Terry style from Ronas IT) -->
+    <div class="app-header">
+      <div class="user-greeting-wrap">
+        <span class="user-greeting-label">Xush kelibsiz 👋</span>
+        <h2 class="user-greeting-name" id="header-student-name">EduFocus</h2>
+      </div>
+      <div class="header-action-btn" onclick="openNotificationsModal()" title="Xabarlar">
+        <span>🔔</span>
+        <div class="header-action-dot" id="header-bell-dot"></div>
+      </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- SCREEN 1: MAIN DASHBOARD & JOIN FORM         -->
+    <!-- ============================================ -->
+    <div id="screen-join">
+      <!-- Balance Card / Hero Focus Card -->
+      <div class="hero-balance-card">
+        <div class="hero-balance-label-row">
+          <span class="hero-balance-label">DARS REJIMI VA FOKUS</span>
+          <span style="font-size: 11px; background: #F3F4F6; padding: 4px 10px; border-radius: 9999px; font-weight: 700; color: #4B5563">
+            ⚡ Jonli Nazorat
+          </span>
         </div>
-        <button type="button" class="btn btn-primary btn-sm" style="pointer-events: none; padding: 6px 12px; font-size: 12px">
-          O'rnatish
+        <div class="hero-balance-value">
+          <span id="hero-focus-val">100%</span>
+          <span style="font-size: 15px; font-weight: 700; color: #10B981; background: #ECFDF5; padding: 4px 10px; border-radius: 10px">A'lo</span>
+        </div>
+        <p style="font-size: 13px; color: var(--app-text-secondary); margin-bottom: 16px" id="session-info">
+          Darsga ulanish uchun quyidagi tugmani bosing
+        </p>
+        <button type="button" class="hero-balance-pill-btn" onclick="openJoinSheet()" id="hero-join-action-btn">
+          <span>🚀</span> Darsga Kirish
         </button>
       </div>
 
-      <div class="student-logo">
-        <div class="logo-icon" style="width:32px;height:32px;font-size:16px">🎓</div>
-        <span>EduFocus</span>
+      <!-- Your Cards Section (Ronas IT iconic horizontal carousel) -->
+      <div class="section-title-row">
+        <h3 class="section-title">Dars kartalari</h3>
+        <span class="section-action-link" style="color: var(--app-text-muted)">3 ta faol</span>
       </div>
 
-      <h1 class="student-title">Darsga Xush Kelibsiz!</h1>
-      <p class="student-subtitle" id="session-info">Darsga qo'shilish uchun ismingizni kiriting</p>
+      <div class="cards-carousel-container">
+        <!-- Card 1: Electric Lime (Neobank icon card style from Dribbble) -->
+        <div class="fin-card card-lime">
+          <div class="card-top-row">
+            <span class="card-brand">EDUFOCUS</span>
+            <div class="card-chip">⚡</div>
+          </div>
+          <div>
+            <div class="card-middle-label">Diqqat Indeksi</div>
+            <div class="card-middle-val">100% Fokus</div>
+          </div>
+          <div class="card-bottom-row">
+            <span>Dars intizomi</span>
+            <span class="card-pill-tag">Faol</span>
+          </div>
+        </div>
 
-      <div id="join-error" class="form-error" style="text-align:center"></div>
+        <!-- Card 2: Dark Charcoal Titanium -->
+        <div class="fin-card card-dark">
+          <div class="card-top-row">
+            <span class="card-brand">INTIZOM</span>
+            <div class="card-chip">🛡️</div>
+          </div>
+          <div>
+            <div class="card-middle-label">Chiqishlar Soni</div>
+            <div class="card-middle-val">0 qoidabuzarlik</div>
+          </div>
+          <div class="card-bottom-row">
+            <span>Standart rejim</span>
+            <span class="card-pill-tag">Namunali</span>
+          </div>
+        </div>
+
+        <!-- Card 3: Soft Silver -->
+        <div class="fin-card" style="background: #FFFFFF; border: 1px solid var(--app-border)">
+          <div class="card-top-row">
+            <span class="card-brand" style="color: var(--app-dark)">QURILMA</span>
+            <div class="card-chip" style="background: #F3F4F6">📱</div>
+          </div>
+          <div>
+            <div class="card-middle-label" style="color: var(--app-text-secondary)">Model</div>
+            <div class="card-middle-val" style="color: var(--app-dark); font-size: 15px" id="device-model-card">Qurilma...</div>
+          </div>
+          <div class="card-bottom-row" style="color: var(--app-text-secondary)">
+            <span>Holat</span>
+            <span class="card-pill-tag" style="background: #F3F4F6; color: var(--app-dark)">Ulandi</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions List Section (Add money to Neobank style from Dribbble) -->
+      <div class="section-title-row" style="margin-top: 10px">
+        <h3 class="section-title">Dars xizmatlari</h3>
+      </div>
+
+      <div class="action-list-card">
+        <!-- Action 1: Install PWA -->
+        <div class="action-row-item" onclick="triggerPWAInstall()">
+          <div class="action-icon-box lime">📲</div>
+          <div class="action-content-wrap">
+            <div class="action-item-title">Ilovani Telefonga O'rnatish</div>
+            <div class="action-item-subtitle">Bosh ekranga 1-klik bilan yuklash (PWA)</div>
+          </div>
+          <span class="action-chevron">›</span>
+        </div>
+
+        <!-- Action 2: Quiz -->
+        <div class="action-row-item" onclick="openStudentQuizIfAvailable()">
+          <div class="action-icon-box dark">📝</div>
+          <div class="action-content-wrap">
+            <div class="action-item-title">Tezkor Test (Quiz)</div>
+            <div class="action-item-subtitle" id="menu-quiz-subtitle">Ustoz yuborgan testlarni yechish</div>
+          </div>
+          <span class="action-chevron">›</span>
+        </div>
+
+        <!-- Action 3: Material -->
+        <div class="action-row-item" onclick="openStudentMaterialIfAvailable()">
+          <div class="action-icon-box" style="background: #E0E7FF; color: #4338CA">📚</div>
+          <div class="action-content-wrap">
+            <div class="action-item-title">Darslik va Materiallar</div>
+            <div class="action-item-subtitle" id="menu-material-subtitle">Topshiriq va elektron qo'llanmalar</div>
+          </div>
+          <span class="action-chevron">›</span>
+        </div>
+
+        <!-- Action 4: Session code manual -->
+        <div class="action-row-item" onclick="openJoinSheet()">
+          <div class="action-icon-box" style="background: #FEF3C7; color: #B45309">🔑</div>
+          <div class="action-content-wrap">
+            <div class="action-item-title">Dars Kodi Bilan Kirish</div>
+            <div class="action-item-subtitle">8 xonali sessiya kodini kiritish</div>
+          </div>
+          <span class="action-chevron">›</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- SCREEN 2: LOCK SCREEN (Ronas IT Focus Mode)  -->
+    <!-- ============================================ -->
+    <div id="screen-lock" style="display: none" class="focus-lock-container">
+      <div class="focus-badge-pill">
+        <div class="focus-badge-dot"></div>
+        <span>Dars Rejimi Faol — Telefon Qulflangan</span>
+      </div>
+
+      <h1 style="font-size: 24px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 4px" id="lock-session-name">
+        Dars Davom Etmoqda
+      </h1>
+      <p style="font-size: 13px; color: var(--app-text-secondary); margin-bottom: 10px">
+        Ustoz dars davomida diqqatni jamlashni so'radi
+      </p>
+
+      <!-- Ronas IT Pulsing Timer Ring -->
+      <div class="focus-ring-wrapper">
+        <div class="focus-pulse-glow"></div>
+        <svg class="focus-circle-svg" width="220" height="220">
+          <circle cx="110" cy="110" r="95" stroke="#E2E8F0" stroke-width="12" fill="none"></circle>
+          <circle id="lock-progress-circle" cx="110" cy="110" r="95" stroke="#D4F637" stroke-width="12" fill="none" stroke-linecap="round" stroke-dasharray="597" stroke-dashoffset="0"></circle>
+        </svg>
+        <div class="focus-timer-text-wrap">
+          <div class="focus-timer-digits" id="lock-timer">45:00</div>
+          <div class="focus-timer-label">QOLGAN VAQT</div>
+        </div>
+      </div>
+
+      <!-- Quick Status Cards in Lock Screen -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; margin-top: 10px">
+        <div style="background: #FFFFFF; border: 1px solid var(--app-border); border-radius: var(--app-radius-lg); padding: 14px; text-align: left">
+          <div style="font-size: 11px; font-weight: 700; color: var(--app-text-muted); text-transform: uppercase">Diqqat Indeksi</div>
+          <div style="font-size: 20px; font-weight: 800; color: #10B981; margin-top: 2px" id="lock-focus-score">100%</div>
+          <div style="font-size: 11px; color: var(--app-text-secondary); margin-top: 2px">Namunali intizom</div>
+        </div>
+        <div style="background: #FFFFFF; border: 1px solid var(--app-border); border-radius: var(--app-radius-lg); padding: 14px; text-align: left">
+          <div style="font-size: 11px; font-weight: 700; color: var(--app-text-muted); text-transform: uppercase">Chiqishlar</div>
+          <div style="font-size: 20px; font-weight: 800; color: var(--app-dark); margin-top: 2px" id="lock-violation-count">0 marta</div>
+          <div style="font-size: 11px; color: var(--app-text-secondary); margin-top: 2px">Qoidabuzarliksiz</div>
+        </div>
+      </div>
+
+      <div class="focus-warning-notice">
+        <span style="font-size: 18px">⚠️</span>
+        <span>Sahifadan boshqa ilovalarga o'tsangiz, ustoz monitorida darhol xabar ko'rinadi!</span>
+      </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- SCREEN 3: UNLOCKED                           -->
+    <!-- ============================================ -->
+    <div id="screen-unlocked" style="display: none; padding: 24px; text-align: center">
+      <div style="width: 72px; height: 72px; border-radius: 50%; background: var(--app-lime); color: var(--app-dark); display: flex; align-items: center; justify-content: center; font-size: 32px; margin: 20px auto 16px; box-shadow: 0 10px 25px rgba(212, 246, 55, 0.4)">
+        🔓
+      </div>
+      <h2 style="font-size: 26px; font-weight: 800; color: var(--app-dark); margin-bottom: 6px">Ruxsat Berildi!</h2>
+      <p style="font-size: 14px; color: var(--app-text-secondary); margin-bottom: 24px">
+        Ustoz telefoningizdan foydalanishga ruxsat berdi.
+      </p>
+
+      <div class="hero-balance-card" style="margin: 0 0 20px; text-align: left">
+        <div style="font-size: 12px; font-weight: 700; color: var(--app-text-muted); text-transform: uppercase">Sessiya Nomi</div>
+        <div style="font-size: 20px; font-weight: 800; color: var(--app-dark); margin: 4px 0 12px" id="unlocked-session">—</div>
+        <div style="display: flex; gap: 8px">
+          <span style="background: #ECFDF5; color: #10B981; padding: 4px 10px; border-radius: 9999px; font-weight: 700; font-size: 12px">✅ Ruxsat Etilgan</span>
+          <span style="background: #F3F4F6; color: #4B5563; padding: 4px 10px; border-radius: 9999px; font-weight: 700; font-size: 12px">Dars davomida</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- SCREEN 4: SESSION ENDED                      -->
+    <!-- ============================================ -->
+    <div id="screen-ended" style="display: none; padding: 24px; text-align: center">
+      <div style="width: 72px; height: 72px; border-radius: 50%; background: #10B981; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 32px; margin: 20px auto 16px; box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3)">
+        🎉
+      </div>
+      <h2 style="font-size: 26px; font-weight: 800; color: var(--app-dark); margin-bottom: 6px">Dars Tugadi!</h2>
+      <p style="font-size: 14px; color: var(--app-text-secondary); margin-bottom: 24px">
+        Diqqatingiz va faol ishtirokingiz uchun tashakkur!
+      </p>
+
+      <div class="hero-balance-card" style="margin: 0 0 20px; text-align: left">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px">
+          <span style="font-size: 13px; font-weight: 600; color: var(--app-text-secondary)">Qatnashish vaqti</span>
+          <strong style="font-size: 15px; color: var(--app-dark)" id="end-duration">45 daqiqa</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px">
+          <span style="font-size: 13px; font-weight: 600; color: var(--app-text-secondary)">Intizom holati</span>
+          <span style="background: #ECFDF5; color: #10B981; padding: 4px 10px; border-radius: 9999px; font-weight: 700; font-size: 12px">A'lo (100%)</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center">
+          <span style="font-size: 13px; font-weight: 600; color: var(--app-text-secondary)">Holat</span>
+          <strong style="color: var(--app-dark)">To'liq qatnashdi ⭐</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- FLOATING BOTTOM NAVIGATION BAR (Ronas IT)    -->
+    <!-- ============================================ -->
+    <div class="mobile-bottom-nav">
+      <button class="nav-tab-btn active" onclick="switchNavTab('home')" id="tab-nav-home">
+        <span class="nav-tab-icon">🏠</span>
+        <span class="nav-tab-label">Dars</span>
+      </button>
+      <button class="nav-tab-btn" onclick="openStudentQuizIfAvailable()" id="tab-nav-quiz">
+        <span class="nav-tab-icon">📝</span>
+        <span class="nav-tab-label">Test</span>
+      </button>
+      <button class="nav-tab-btn" onclick="openStudentMaterialIfAvailable()" id="tab-nav-material">
+        <span class="nav-tab-icon">📚</span>
+        <span class="nav-tab-label">Material</span>
+      </button>
+      <button class="nav-tab-btn" onclick="triggerPWAInstall()" id="tab-nav-install">
+        <span class="nav-tab-icon">📲</span>
+        <span class="nav-tab-label">O'rnatish</span>
+      </button>
+    </div>
+
+  </div> <!-- End mobile-app-shell -->
+
+  <!-- ============================================ -->
+  <!-- BOTTOM SHEET 1: JOIN FORM MODAL             -->
+  <!-- ============================================ -->
+  <div id="join-sheet-modal" class="mobile-modal-overlay">
+    <div class="mobile-bottom-sheet">
+      <div class="sheet-handle"></div>
+      <h3 class="sheet-title">Darsga Qo'shilish 🚀</h3>
+      <p class="sheet-subtitle">Ismingiz va dars kodini kiriting</p>
 
       <form id="join-form">
-        <!-- Session code field (visible if no URL session parameter) -->
-        <div class="form-group" id="manual-session-group" style="display: none">
-          <label class="form-label" for="manual-session-code">Dars (Sessiya) Kodi</label>
-          <div class="input-icon-wrap">
-            <span class="input-icon">🔑</span>
-            <input type="text" id="manual-session-code" class="form-input" placeholder="Masalan: 44275fc5">
-          </div>
-          <span style="font-size: 11px; color: var(--text-muted)">Ustoz bergan 8 xonali dars kodini kiriting</span>
+        <div id="join-error" style="color: #EF4444; font-size: 13px; font-weight: 600; margin-bottom: 12px; display: none"></div>
+
+        <div id="manual-session-group" style="margin-bottom: 12px">
+          <label style="font-size: 12px; font-weight: 700; color: var(--app-text-secondary); margin-bottom: 4px; display: block">Dars (Sessiya) Kodi</label>
+          <input type="text" id="manual-session-code" class="mobile-input-field" placeholder="Masalan: 44275fc5">
         </div>
 
-        <div class="form-group">
-          <label class="form-label" for="student-name">Ismingizni kiriting</label>
-          <div class="input-icon-wrap">
-            <span class="input-icon">👤</span>
-            <input type="text" id="student-name" class="form-input" placeholder="Masalan: Ali Karimov" required autofocus autocomplete="name">
-          </div>
+        <div style="margin-bottom: 16px">
+          <label style="font-size: 12px; font-weight: 700; color: var(--app-text-secondary); margin-bottom: 4px; display: block">Ismingiz va Familiyangiz</label>
+          <input type="text" id="student-name" class="mobile-input-field" placeholder="Masalan: Ali Karimov" required autocomplete="name">
         </div>
 
-        <div class="device-info" id="device-info">
-          <div class="device-item">
-            <span>📱</span>
-            <span id="device-model">Qurilma aniqlanmoqda...</span>
-          </div>
-          <div class="device-item">
-            <span>🕐</span>
-            <span id="device-time">—</span>
-          </div>
+        <div style="background: #F9FAFB; border-radius: var(--app-radius-md); padding: 12px 14px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--app-text-secondary)">
+          <span>📱 Qurilma: <strong id="device-model">Aniqlanmoqda...</strong></span>
+          <span id="device-time">—</span>
         </div>
 
-        <button type="submit" class="btn btn-primary btn-lg" style="width:100%" id="join-btn">
-          Darsga Qo'shilish
+        <button type="submit" class="mobile-btn-lime" id="join-btn" style="margin-bottom: 10px">
+          Darsga Kirish 🚀
+        </button>
+
+        <button type="button" class="mobile-btn-dark" style="background: #F3F4F6; color: var(--app-dark)" onclick="closeJoinSheet()">
+          Bekor Qilish
         </button>
       </form>
     </div>
   </div>
 
-  <!-- ======================== -->
-  <!-- SCREEN 2: LOCK SCREEN -->
-  <!-- ======================== -->
-  <div id="screen-lock" class="lock-screen" style="display:none">
-    <div class="lock-icon">🔒</div>
-    <h1 class="lock-title">Telefon Bloklangan</h1>
-    <p class="lock-session-name" id="lock-session-name">—</p>
-    <div class="lock-timer" id="lock-timer">00:00</div>
-    <p class="lock-message">Ustoz ruxsat berguncha kuting</p>
-    <div class="lock-warning">
-      <span>⚠️</span>
-      <span>Sahifadan chiqsangiz, ustoz xabardor bo'ladi</span>
-    </div>
-  </div>
+  <!-- ============================================ -->
+  <!-- BOTTOM SHEET 2: INSTALL GUIDE MODAL         -->
+  <!-- ============================================ -->
+  <div id="install-guide-modal" class="mobile-modal-overlay">
+    <div class="mobile-bottom-sheet">
+      <div class="sheet-handle"></div>
+      <h3 class="sheet-title">📲 Ilovani O'rnatish</h3>
+      <p class="sheet-subtitle">EduFocus ilovasini telefoningizga yuklab oling</p>
 
-  <!-- ======================== -->
-  <!-- SCREEN 3: UNLOCKED -->
-  <!-- ======================== -->
-  <div id="screen-unlocked" class="end-screen" style="display:none">
-    <div class="end-icon">🔓</div>
-    <h1 class="end-title" style="color: var(--blue-400)">Ruxsat Berildi!</h1>
-    <p class="end-message">Ustoz telefoningizdan foydalanishga ruxsat berdi</p>
-
-    <div class="end-stats">
-      <div class="end-stat-row">
-        <span class="end-stat-label">Sessiya</span>
-        <span class="end-stat-value" id="unlocked-session">—</span>
-      </div>
-      <div class="end-stat-row">
-        <span class="end-stat-label">Status</span>
-        <span class="end-stat-value" style="color: var(--blue-400)">Ruxsat berildi</span>
-      </div>
-    </div>
-
-    <p style="font-size: 13px; color: var(--text-muted)">Ustoz qayta bloklashi mumkin</p>
-  </div>
-
-  <!-- ======================== -->
-  <!-- SCREEN 4: SESSION ENDED -->
-  <!-- ======================== -->
-  <div id="screen-ended" class="end-screen" style="display:none">
-    <div class="end-icon">✅</div>
-    <h1 class="end-title">Dars Tugadi!</h1>
-    <p class="end-message">Rahmat! Diqqatingiz uchun tashakkur.</p>
-
-    <div class="end-stats">
-      <div class="end-stat-row">
-        <span class="end-stat-label">Qatnashish vaqti</span>
-        <span class="end-stat-value" id="end-duration">—</span>
-      </div>
-      <div class="end-stat-row">
-        <span class="end-stat-label">Status</span>
-        <span class="end-stat-value" style="color: var(--green-400)">To'liq qatnashdi</span>
-      </div>
-    </div>
-
-    <div class="end-badge">⭐ Ajoyib!</div>
-  </div>
-
-  <!-- ======================== -->
-  <!-- SCREEN: ERROR / SESSION INPUT -->
-  <!-- ======================== -->
-  <div id="screen-error" class="end-screen" style="display:none">
-    <div class="end-icon" id="error-icon">🔑</div>
-    <h1 class="end-title" id="error-title" style="color: var(--blue-400)">Dars Kodi Talab Qilinadi</h1>
-    <p class="end-message" id="error-message">Darsga kirish uchun ustoz taqdim etgan kodni kiriting yoki ilovani o'rnating</p>
-
-    <div style="max-width: 320px; margin: 0 auto 20px">
-      <button type="button" class="btn btn-primary btn-lg" style="width: 100%; margin-bottom: 12px" onclick="switchToManualSession()">
-        🔑 Kodni Kiritish
+      <button type="button" id="modal-direct-install-btn" class="mobile-btn-lime" style="margin-bottom: 18px" onclick="performDirectInstall()">
+        🚀 Hoziroq O'rnatish (1-klik)
       </button>
-      <button type="button" class="btn btn-outline" style="width: 100%" onclick="triggerPWAInstall()">
-        📲 Ilovani O'rnatish
-      </button>
-    </div>
 
-    <a href="/" style="font-size: 13px; color: var(--text-muted); text-decoration: none">
-      🏠 Bosh sahifaga qaytish
-    </a>
-  </div>
-
-  <!-- Install Guide Modal -->
-  <div id="install-guide-modal" class="modal-overlay">
-    <div class="modal" style="max-width: 440px; text-align: left">
-      <div class="modal-header">
-        <h3 class="modal-title" style="display: flex; align-items: center; gap: 8px">
-          <span>📲</span> EduFocus Ilovasini O'rnatish
-        </h3>
-        <button class="modal-close" onclick="closeInstallGuide()">✕</button>
-      </div>
-
-      <div style="padding: 12px 0">
-        <button type="button" id="modal-direct-install-btn" class="btn btn-primary btn-lg" style="width: 100%; margin-bottom: 20px; justify-content: center" onclick="performDirectInstall()">
-          🚀 Hoziroq O'rnatish
-        </button>
-
-        <div style="font-size: 13px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px">
-          Qo'lda o'rnatish bo'yicha ko'rsatma:
+      <!-- Android Guide Card -->
+      <div style="background: #F9FAFB; border: 1px solid var(--app-border); border-radius: var(--app-radius-lg); padding: 16px; margin-bottom: 12px">
+        <div style="display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 14px; color: #10B981; margin-bottom: 8px">
+          <span>🤖</span> Android (Chrome) uchun:
         </div>
-
-        <!-- Android Guide -->
-        <div style="background: var(--bg-tertiary); border-radius: var(--radius-md); padding: 12px 14px; margin-bottom: 10px; border-left: 3px solid var(--green-400)">
-          <div style="font-weight: 700; font-size: 13px; color: var(--green-400); margin-bottom: 4px">🤖 Android (Chrome) uchun:</div>
-          <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.5">
-            1. Brauzerning yuqori o'ng burchagidagi <strong>⋮ (3 nuqta)</strong> menyusini bosing.<br>
-            2. <strong>"Ilovani o'rnatish"</strong> (yoki "Bosh ekranga qo'shish") tugmasini bosing.
-          </div>
-        </div>
-
-        <!-- iOS Guide -->
-        <div style="background: var(--bg-tertiary); border-radius: var(--radius-md); padding: 12px 14px; border-left: 3px solid var(--blue-400)">
-          <div style="font-weight: 700; font-size: 13px; color: var(--blue-400); margin-bottom: 4px">🍎 iPhone (Safari) uchun:</div>
-          <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.5">
-            1. Safari brauzerining pastidagi <strong>⎋ (Ulashish / Share)</strong> tugmasini bosing.<br>
-            2. <strong>"Bosh ekranga qo'shish" (Add to Home Screen)</strong> tugmasini bosing.
-          </div>
+        <div style="font-size: 13px; color: var(--app-text-secondary); line-height: 1.6">
+          1. Brauzerning yuqori burchagidagi <strong>⋮ (3 nuqta)</strong> menyusini bosing.<br>
+          2. <strong>"Ilovani o'rnatish"</strong> yoki <strong>"Bosh ekranga qo'shish"</strong> tugmasini bosing.
         </div>
       </div>
 
-      <button type="button" class="btn btn-outline" style="width: 100%; margin-top: 10px" onclick="closeInstallGuide()">
+      <!-- iOS Guide Card -->
+      <div style="background: #F9FAFB; border: 1px solid var(--app-border); border-radius: var(--app-radius-lg); padding: 16px; margin-bottom: 18px">
+        <div style="display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 14px; color: #3B82F6; margin-bottom: 8px">
+          <span>🍎</span> iPhone (Safari) uchun:
+        </div>
+        <div style="font-size: 13px; color: var(--app-text-secondary); line-height: 1.6">
+          1. Safari brauzerining pastidagi <strong>⎋ (Ulashish / Share)</strong> tugmasini bosing.<br>
+          2. Pastga surib, <strong>"Bosh ekranga qo'shish" (Add to Home Screen)</strong> tugmasini bosing.
+        </div>
+      </div>
+
+      <button type="button" class="mobile-btn-dark" onclick="closeInstallGuide()">
         Tushundim
       </button>
     </div>
   </div>
 
-  <!-- ======================== -->
-  <!-- STUDENT QUIZ OVERLAY -->
-  <!-- ======================== -->
+  <!-- ============================================ -->
+  <!-- BOTTOM SHEET 3: STUDENT QUIZ OVERLAY         -->
+  <!-- ============================================ -->
   <div id="student-quiz-overlay" class="student-quiz-overlay" style="display: none">
-    <div class="student-quiz-container">
+    <div class="student-quiz-container" style="background: #FFFFFF; border-radius: 32px">
       <div class="student-quiz-header">
         <div>
-          <h2 style="font-size: 18px; font-weight: 800; margin: 0; color: var(--text-primary)" id="sq-title">📝 Tezkor Test</h2>
-          <span style="font-size: 12px; color: var(--text-muted)" id="sq-qcount">3 ta savol</span>
+          <h2 style="font-size: 18px; font-weight: 800; margin: 0; color: var(--app-dark)" id="sq-title">📝 Tezkor Test</h2>
+          <span style="font-size: 12px; color: var(--app-text-secondary)" id="sq-qcount">3 ta savol</span>
         </div>
         <div id="sq-timer-badge" class="student-quiz-timer" style="display: none">
           <span>⏱️</span> <span id="sq-timer-val">03:00</span>
@@ -231,7 +394,7 @@
       <form id="student-quiz-form" onsubmit="submitStudentQuiz(event)">
         <div id="sq-questions-body"></div>
 
-        <button type="submit" class="btn btn-primary btn-lg" style="width: 100%; margin-top: 14px" id="sq-submit-btn">
+        <button type="submit" class="mobile-btn-lime" style="width: 100%; margin-top: 14px" id="sq-submit-btn">
           Javoblarni Topshirish 🚀
         </button>
       </form>
@@ -239,43 +402,81 @@
       <!-- Quiz Results View (Shown after submitting) -->
       <div id="sq-result-view" style="display: none; text-align: center; padding: 20px 0">
         <div style="font-size: 48px; margin-bottom: 10px" id="sq-result-emoji">🎉</div>
-        <h3 style="font-size: 22px; font-weight: 800; margin-bottom: 6px" id="sq-result-title">Ajoyib natija!</h3>
-        <p style="color: var(--text-secondary); margin-bottom: 16px" id="sq-result-desc">Test muvaffaqiyatli topshirildi</p>
+        <h3 style="font-size: 22px; font-weight: 800; margin-bottom: 6px; color: var(--app-dark)" id="sq-result-title">Ajoyib natija!</h3>
+        <p style="color: var(--app-text-secondary); margin-bottom: 16px" id="sq-result-desc">Test muvaffaqiyatli topshirildi</p>
         
-        <div style="background: var(--bg-tertiary); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 20px">
-          <div style="font-size: 32px; font-weight: 800; color: var(--green-400)" id="sq-result-score">3 / 3</div>
-          <div style="font-size: 13px; color: var(--text-muted)">To'g'ri javoblar soni</div>
+        <div style="background: #F9FAFB; border-radius: var(--app-radius-lg); padding: 16px; margin-bottom: 20px; border: 1px solid var(--app-border)">
+          <div style="font-size: 36px; font-weight: 900; color: #10B981" id="sq-result-score">3 / 3</div>
+          <div style="font-size: 13px; color: var(--app-text-secondary)">To'g'ri javoblar soni</div>
         </div>
 
-        <button type="button" class="btn btn-outline" style="width: 100%" onclick="closeStudentQuiz()">
+        <button type="button" class="mobile-btn-dark" style="width: 100%" onclick="closeStudentQuiz()">
           Yopish
         </button>
       </div>
     </div>
   </div>
 
-  <!-- Material Notification Modal -->
-  <div id="student-material-modal" class="modal-overlay">
-    <div class="modal" style="max-width: 440px">
-      <div class="modal-header">
-        <h3 class="modal-title" style="display: flex; align-items: center; gap: 8px">
-          <span>📚</span> <span id="sm-title">Dars Materiali</span>
-        </h3>
-        <button class="modal-close" onclick="closeStudentMaterial()">✕</button>
+  <!-- ============================================ -->
+  <!-- BOTTOM SHEET 4: MATERIAL MODAL               -->
+  <!-- ============================================ -->
+  <div id="student-material-modal" class="mobile-modal-overlay">
+    <div class="mobile-bottom-sheet">
+      <div class="sheet-handle"></div>
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px">
+        <div style="width: 40px; height: 40px; border-radius: 50%; background: #E0E7FF; color: #4338CA; display: flex; align-items: center; justify-content: center; font-size: 20px">📚</div>
+        <h3 class="sheet-title" id="sm-title" style="margin: 0">Dars Materiali</h3>
       </div>
       <div style="padding: 10px 0">
-        <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.6; margin-bottom: 16px; white-space: pre-wrap" id="sm-text"></p>
-        <a id="sm-link-btn" href="#" target="_blank" class="btn btn-primary" style="width: 100%; text-decoration: none; justify-content: center; display: none">
+        <p style="color: var(--app-text-secondary); font-size: 14px; line-height: 1.6; margin-bottom: 16px; white-space: pre-wrap" id="sm-text"></p>
+        <a id="sm-link-btn" href="#" target="_blank" class="mobile-btn-lime" style="text-decoration: none; margin-bottom: 10px; display: none">
           🔗 Havolani Ochish
         </a>
       </div>
-      <button type="button" class="btn btn-outline" style="width: 100%; margin-top: 10px" onclick="closeStudentMaterial()">
+      <button type="button" class="mobile-btn-dark" onclick="closeStudentMaterial()">
         Tushundim
       </button>
     </div>
   </div>
 
+  <!-- ============================================ -->
+  <!-- NOTIFICATIONS / INFO MODAL                   -->
+  <!-- ============================================ -->
+  <div id="notifications-modal" class="mobile-modal-overlay">
+    <div class="mobile-bottom-sheet">
+      <div class="sheet-handle"></div>
+      <h3 class="sheet-title">Xabarnomalar 🔔</h3>
+      <p class="sheet-subtitle">Dars va ilova yangiliklari</p>
+      
+      <div style="background: #F9FAFB; border-radius: var(--app-radius-lg); padding: 14px; margin-bottom: 12px; border-left: 3px solid var(--app-lime)">
+        <div style="font-weight: 700; font-size: 14px; color: var(--app-dark); margin-bottom: 2px">EduFocus Yangi Versiyasi</div>
+        <div style="font-size: 12px; color: var(--app-text-secondary)">Ronas IT zamonaviy dizayni va qulay mobil interfeys faollashtirildi.</div>
+      </div>
+
+      <button type="button" class="mobile-btn-dark" onclick="closeNotificationsModal()">
+        Yopish
+      </button>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- JAVASCRIPT LOGIC                             -->
+  <!-- ============================================ -->
   <script>
+    // ============================================
+    // CLOCK & STATUS BAR
+    // ============================================
+    function updateClock() {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('uz', { hour: '2-digit', minute: '2-digit' });
+      const el = document.getElementById('top-status-time');
+      if (el) el.textContent = timeStr;
+      const devTime = document.getElementById('device-time');
+      if (devTime) devTime.textContent = timeStr;
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+
     // ============================================
     // GET SESSION ID FROM URL
     // ============================================
@@ -283,7 +484,6 @@
     let sessionId = urlParams.get('session');
 
     if (!sessionId) {
-      // Don't show error screen! Allow manual session code entry or app install!
       const manualGroup = document.getElementById('manual-session-group');
       if (manualGroup) manualGroup.style.display = 'block';
       const infoEl = document.getElementById('session-info');
@@ -300,6 +500,8 @@
     let joinTime = null;
     let lockTimerInterval = null;
     let isLocked = true;
+    let activeQuizData = null;
+    let activeMaterialData = null;
 
     // Service Worker & PWA Install
     if ('serviceWorker' in navigator) {
@@ -312,8 +514,6 @@
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
-      const banner = document.getElementById('top-install-banner');
-      if (banner) banner.style.display = 'flex';
       const directBtn = document.getElementById('modal-direct-install-btn');
       if (directBtn) directBtn.style.display = 'flex';
     });
@@ -347,20 +547,34 @@
           closeInstallGuide();
         });
       } else {
-        alert('Ilovani o\'rnatish uchun brauzeringizning 3 nuqta (⋮) menyusi orqali "Ilovani o\'rnatish" yoki "Bosh ekranga qo\'shish" tugmasini bosing.');
+        alert('Ilovani o\'rnatish uchun brauzeringizning 3 nuqta (⋮) yoki Ulashish (Share) menyusi orqali "Ilovani o\'rnatish" yoki "Bosh ekranga qo\'shish" tugmasini bosing.');
       }
     }
 
-    function switchToManualSession() {
-      showScreen('join');
-      const manualGroup = document.getElementById('manual-session-group');
-      if (manualGroup) manualGroup.style.display = 'block';
-      const infoEl = document.getElementById('session-info');
-      if (infoEl) infoEl.textContent = 'Dars kodi va ismingizni kiriting';
-      setTimeout(() => {
-        const inp = document.getElementById('manual-session-code');
-        if (inp) inp.focus();
-      }, 100);
+    function openJoinSheet() {
+      const modal = document.getElementById('join-sheet-modal');
+      if (modal) modal.classList.add('active');
+    }
+
+    function closeJoinSheet() {
+      const modal = document.getElementById('join-sheet-modal');
+      if (modal) modal.classList.remove('active');
+    }
+
+    function openNotificationsModal() {
+      const modal = document.getElementById('notifications-modal');
+      if (modal) modal.classList.add('active');
+    }
+
+    function closeNotificationsModal() {
+      const modal = document.getElementById('notifications-modal');
+      if (modal) modal.classList.remove('active');
+    }
+
+    function switchNavTab(tab) {
+      document.querySelectorAll('.nav-tab-btn').forEach(b => b.classList.remove('active'));
+      const activeBtn = document.getElementById(`tab-nav-${tab}`);
+      if (activeBtn) activeBtn.classList.add('active');
     }
 
     // ============================================
@@ -399,15 +613,10 @@
     }
 
     const deviceModel = getDeviceInfo();
-    document.getElementById('device-model').textContent = deviceModel;
-
-    // Update time
-    function updateTime() {
-      document.getElementById('device-time').textContent =
-        new Date().toLocaleTimeString('uz', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    }
-    updateTime();
-    setInterval(updateTime, 1000);
+    const devModelEl = document.getElementById('device-model');
+    if (devModelEl) devModelEl.textContent = deviceModel;
+    const devModelCard = document.getElementById('device-model-card');
+    if (devModelCard) devModelCard.textContent = deviceModel;
 
     // ============================================
     // LOAD SESSION INFO
@@ -421,22 +630,18 @@
 
         if (data.id) {
           if (data.status !== 'active') {
-            showScreen('error');
-            document.getElementById('error-message').textContent = 'Bu sessiya allaqachon tugagan.';
+            document.getElementById('session-info').textContent = 'Bu dars sessiyasi allaqachon tugagan.';
             return;
           }
           document.getElementById('session-info').textContent = `${data.name} — ${data.subject || ''}`;
+          document.getElementById('header-student-name').textContent = data.name;
         } else {
-          showScreen('error');
-          document.getElementById('error-message').textContent = 'Sessiya topilmadi. QR kodni tekshiring.';
+          document.getElementById('session-info').textContent = 'Sessiya topilmadi. Kodni tekshiring.';
         }
       } catch (err) {
-        // Might fail, but continue anyway
-        console.log('Session info could not be loaded');
+        console.log('Session info error');
       }
     }
-
-    loadSessionInfo();
 
     // ============================================
     // JOIN FORM
@@ -460,7 +665,7 @@
 
       const joinBtn = document.getElementById('join-btn');
       joinBtn.disabled = true;
-      joinBtn.innerHTML = '<div class="spinner"></div> Qo\'shilmoqda...';
+      joinBtn.innerHTML = 'Ulanmoqda...';
 
       socket.emit('student-join', {
         sessionId: sessionId,
@@ -477,8 +682,17 @@
       joinTime = Date.now();
       isLocked = data.locked;
 
+      closeJoinSheet();
+
+      const studentName = document.getElementById('student-name').value.trim();
+      document.getElementById('header-student-name').textContent = studentName || data.sessionName;
       document.getElementById('lock-session-name').textContent = `${data.sessionName} — ${data.subject || ''}`;
       document.getElementById('unlocked-session').textContent = data.sessionName;
+
+      // Update hero
+      document.getElementById('hero-join-action-btn').innerHTML = '✅ Darsga Ulandingiz';
+      document.getElementById('hero-join-action-btn').style.background = 'var(--app-lime)';
+      document.getElementById('hero-join-action-btn').style.color = 'var(--app-dark)';
 
       if (isLocked) {
         showScreen('lock');
@@ -488,11 +702,12 @@
         showScreen('unlocked');
       }
 
-      // Check if teacher already sent active quiz or material
       if (data.activeQuiz) {
+        activeQuizData = data.activeQuiz;
         renderStudentQuiz(data.activeQuiz);
       }
       if (data.activeMaterial) {
+        activeMaterialData = data.activeMaterial;
         showStudentMaterial(data.activeMaterial);
       }
     });
@@ -504,7 +719,7 @@
 
       const joinBtn = document.getElementById('join-btn');
       joinBtn.disabled = false;
-      joinBtn.innerHTML = 'Darsga Qo\'shilish';
+      joinBtn.innerHTML = 'Darsga Kirish 🚀';
     });
 
     socket.on('session-unlocked', (data) => {
@@ -512,7 +727,6 @@
       showScreen('unlocked');
       exitFullscreen();
 
-      // Vibrate if supported
       if (navigator.vibrate) {
         navigator.vibrate([200, 100, 200]);
       }
@@ -527,7 +741,6 @@
     socket.on('session-ended', (data) => {
       isLocked = false;
 
-      // Calculate duration
       if (joinTime) {
         const elapsed = Math.floor((Date.now() - joinTime) / 1000 / 60);
         document.getElementById('end-duration').textContent = `${elapsed} daqiqa`;
@@ -538,18 +751,17 @@
       closeStudentQuiz();
       if (lockTimerInterval) clearInterval(lockTimerInterval);
 
-      // Vibrate
       if (navigator.vibrate) {
         navigator.vibrate([200, 100, 200, 100, 200]);
       }
     });
 
-    // Quiz broadcast from teacher
     socket.on('new-quiz', (quiz) => {
+      activeQuizData = quiz;
+      document.getElementById('menu-quiz-subtitle').textContent = `Yangi: "${quiz.title}"`;
       renderStudentQuiz(quiz);
     });
 
-    // Quiz result returned
     socket.on('quiz-result', (data) => {
       document.getElementById('student-quiz-form').style.display = 'none';
       document.getElementById('sq-result-view').style.display = 'block';
@@ -568,16 +780,156 @@
       }
     });
 
-    // Material broadcast from teacher
     socket.on('new-material', (material) => {
+      activeMaterialData = material;
+      document.getElementById('menu-material-subtitle').textContent = `Yangi: "${material.title}"`;
       showStudentMaterial(material);
     });
 
     // ============================================
-    // STUDENT QUIZ & MATERIAL LOGIC
+    // SCREEN MANAGEMENT
+    // ============================================
+    function showScreen(screen) {
+      const screens = ['join', 'lock', 'unlocked', 'ended'];
+      screens.forEach(s => {
+        const el = document.getElementById(`screen-${s}`);
+        if (el) el.style.display = (s === screen) ? 'block' : 'none';
+      });
+
+      // Bottom nav bar visibility
+      const bottomNav = document.querySelector('.mobile-bottom-nav');
+      if (bottomNav) {
+        bottomNav.style.display = (screen === 'lock') ? 'none' : 'flex';
+      }
+    }
+
+    // ============================================
+    // LOCK TIMER
+    // ============================================
+    function startLockTimer(durationMinutes) {
+      if (lockTimerInterval) clearInterval(lockTimerInterval);
+
+      let totalSeconds = (durationMinutes || 45) * 60;
+      let remainingSeconds = totalSeconds;
+
+      function updateDisplay() {
+        const minutes = Math.floor(remainingSeconds / 60);
+        const seconds = remainingSeconds % 60;
+        const str = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        const el = document.getElementById('lock-timer');
+        if (el) el.textContent = str;
+
+        // Update circular ring offset
+        const circle = document.getElementById('lock-progress-circle');
+        if (circle) {
+          const circumference = 597;
+          const offset = circumference - (remainingSeconds / totalSeconds) * circumference;
+          circle.style.strokeDashoffset = offset;
+        }
+
+        if (remainingSeconds <= 0) {
+          clearInterval(lockTimerInterval);
+        } else {
+          remainingSeconds--;
+        }
+      }
+
+      updateDisplay();
+      lockTimerInterval = setInterval(updateDisplay, 1000);
+    }
+
+    // ============================================
+    // FULLSCREEN & WAKE LOCK
+    // ============================================
+    function requestFullscreen() {
+      try {
+        const el = document.documentElement;
+        if (el.requestFullscreen) {
+          el.requestFullscreen().catch(() => {});
+        } else if (el.webkitRequestFullscreen) {
+          el.webkitRequestFullscreen();
+        }
+      } catch (e) {}
+
+      requestWakeLock();
+    }
+
+    function exitFullscreen() {
+      try {
+        if (document.exitFullscreen) {
+          document.exitFullscreen().catch(() => {});
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        }
+      } catch (e) {}
+    }
+
+    let wakeLock = null;
+    async function requestWakeLock() {
+      try {
+        if ('wakeLock' in navigator) {
+          wakeLock = await navigator.wakeLock.request('screen');
+        }
+      } catch (e) {}
+    }
+
+    // ============================================
+    // PAGE VISIBILITY (Violation Detection)
+    // ============================================
+    let violationCount = 0;
+    document.addEventListener('visibilitychange', () => {
+      if (!studentId || !sessionId) return;
+
+      if (document.hidden) {
+        violationCount++;
+        const countEl = document.getElementById('lock-violation-count');
+        if (countEl) countEl.textContent = `${violationCount} marta`;
+
+        const scoreEl = document.getElementById('lock-focus-score');
+        if (scoreEl) {
+          const score = Math.max(0, 100 - (violationCount * 15));
+          scoreEl.textContent = `${score}%`;
+          if (score < 70) scoreEl.style.color = '#EF4444';
+          else if (score < 90) scoreEl.style.color = '#F59E0B';
+        }
+
+        socket.emit('student-left-page', {
+          sessionId: sessionId,
+          studentId: studentId
+        });
+      } else {
+        socket.emit('student-returned', {
+          sessionId: sessionId,
+          studentId: studentId
+        });
+
+        if (isLocked) {
+          requestFullscreen();
+        }
+      }
+    });
+
+    // ============================================
+    // STUDENT QUIZ & MATERIAL
     // ============================================
     let currentStudentQuiz = null;
     let quizTimerInterval = null;
+
+    function openStudentQuizIfAvailable() {
+      if (activeQuizData) {
+        renderStudentQuiz(activeQuizData);
+      } else {
+        alert('Hozircha ustoz tomonidan test yuborilmadi.');
+      }
+    }
+
+    function openStudentMaterialIfAvailable() {
+      if (activeMaterialData) {
+        showStudentMaterial(activeMaterialData);
+      } else {
+        alert('Hozircha ustoz tomonidan dars materiali yuborilmadi.');
+      }
+    }
 
     function renderStudentQuiz(quiz) {
       currentStudentQuiz = quiz;
@@ -590,14 +942,14 @@
         const optionsHtml = q.options.map((opt, oIndex) => `
           <label class="student-quiz-option" id="opt-label-${q.id}-${oIndex}">
             <input type="radio" name="answer_${q.id}" value="${oIndex}" required onchange="selectQuizOption('${q.id}', ${oIndex})">
-            <span style="font-weight: 700; width: 22px; color: var(--blue-400)">${letters[oIndex]})</span>
-            <span style="flex: 1">${opt}</span>
+            <span style="font-weight: 800; width: 22px; color: var(--app-dark)">${letters[oIndex]})</span>
+            <span style="flex: 1; font-size: 14px; font-weight: 600">${opt}</span>
           </label>
         `).join('');
 
         return `
-          <div class="student-quiz-q">
-            <div class="student-quiz-q-title">${qIndex + 1}. ${q.text}</div>
+          <div class="student-quiz-q" style="background: #F9FAFB; border: 1px solid var(--app-border); border-radius: var(--app-radius-lg); margin-bottom: 14px">
+            <div class="student-quiz-q-title" style="color: var(--app-dark)">${qIndex + 1}. ${q.text}</div>
             <div>${optionsHtml}</div>
           </div>
         `;
@@ -638,9 +990,15 @@
     }
 
     function selectQuizOption(qId, oIndex) {
-      document.querySelectorAll(`[id^="opt-label-${qId}-"]`).forEach(l => l.classList.remove('selected'));
+      document.querySelectorAll(`[id^="opt-label-${qId}-"]`).forEach(l => {
+        l.style.borderColor = 'var(--app-border)';
+        l.style.background = '#FFFFFF';
+      });
       const activeLabel = document.getElementById(`opt-label-${qId}-${oIndex}`);
-      if (activeLabel) activeLabel.classList.add('selected');
+      if (activeLabel) {
+        activeLabel.style.borderColor = 'var(--app-dark)';
+        activeLabel.style.background = 'rgba(212, 246, 55, 0.2)';
+      }
     }
 
     function submitStudentQuiz(e) {
@@ -682,12 +1040,13 @@
       const linkBtn = document.getElementById('sm-link-btn');
       if (material.url) {
         linkBtn.href = material.url;
-        linkBtn.style.display = 'inline-flex';
+        linkBtn.style.display = 'flex';
       } else {
         linkBtn.style.display = 'none';
       }
 
-      document.getElementById('student-material-modal').classList.add('active');
+      const modal = document.getElementById('student-material-modal');
+      if (modal) modal.classList.add('active');
 
       if (navigator.vibrate) {
         navigator.vibrate(200);
@@ -695,149 +1054,9 @@
     }
 
     function closeStudentMaterial() {
-      document.getElementById('student-material-modal').classList.remove('active');
+      const modal = document.getElementById('student-material-modal');
+      if (modal) modal.classList.remove('active');
     }
-
-    // ============================================
-    // SCREEN MANAGEMENT
-    // ============================================
-    function showScreen(screen) {
-      const screens = ['join', 'lock', 'unlocked', 'ended', 'error'];
-      screens.forEach(s => {
-        document.getElementById(`screen-${s}`).style.display = s === screen ? '' : 'none';
-      });
-    }
-
-    // ============================================
-    // LOCK TIMER
-    // ============================================
-    function startLockTimer(durationMinutes) {
-      let totalSeconds = durationMinutes * 60;
-      const startTime = Date.now();
-
-      if (lockTimerInterval) clearInterval(lockTimerInterval);
-
-      lockTimerInterval = setInterval(() => {
-        const elapsed = Math.floor((Date.now() - startTime) / 1000);
-        const remaining = Math.max(0, totalSeconds - elapsed);
-
-        const mins = Math.floor(remaining / 60).toString().padStart(2, '0');
-        const secs = (remaining % 60).toString().padStart(2, '0');
-
-        document.getElementById('lock-timer').textContent = `${mins}:${secs}`;
-
-        if (remaining <= 0) {
-          clearInterval(lockTimerInterval);
-        }
-      }, 1000);
-    }
-
-    // ============================================
-    // FULLSCREEN API
-    // ============================================
-    function requestFullscreen() {
-      const el = document.documentElement;
-      try {
-        if (el.requestFullscreen) {
-          el.requestFullscreen().catch(() => {});
-        } else if (el.webkitRequestFullscreen) {
-          el.webkitRequestFullscreen();
-        }
-      } catch (e) {
-        // Fullscreen not supported, continue silently
-      }
-
-      // Request wake lock to prevent screen from turning off
-      requestWakeLock();
-    }
-
-    function exitFullscreen() {
-      try {
-        if (document.exitFullscreen) {
-          document.exitFullscreen().catch(() => {});
-        } else if (document.webkitExitFullscreen) {
-          document.webkitExitFullscreen();
-        }
-      } catch (e) {}
-    }
-
-    // ============================================
-    // WAKE LOCK (keep screen on)
-    // ============================================
-    let wakeLock = null;
-
-    async function requestWakeLock() {
-      try {
-        if ('wakeLock' in navigator) {
-          wakeLock = await navigator.wakeLock.request('screen');
-        }
-      } catch (e) {
-        // Wake Lock not supported
-      }
-    }
-
-    // ============================================
-    // PAGE VISIBILITY (detect leaving)
-    // ============================================
-    document.addEventListener('visibilitychange', () => {
-      if (!studentId || !sessionId) return;
-
-      if (document.hidden) {
-        // Student left the page
-        socket.emit('student-left-page', {
-          sessionId: sessionId,
-          studentId: studentId
-        });
-      } else {
-        // Student returned
-        socket.emit('student-returned', {
-          sessionId: sessionId,
-          studentId: studentId
-        });
-
-        // Re-request fullscreen if locked
-        if (isLocked) {
-          requestFullscreen();
-        }
-      }
-    });
-
-    // Prevent back button
-    window.addEventListener('beforeunload', (e) => {
-      if (isLocked && studentId) {
-        e.preventDefault();
-        e.returnValue = 'Dars davom etmoqda. Sahifadan chiqmoqchimisiz?';
-      }
-    });
-
-    // Push state to prevent back navigation
-    if (sessionId) {
-      history.pushState(null, null, location.href);
-      window.addEventListener('popstate', () => {
-        if (isLocked) {
-          history.pushState(null, null, location.href);
-        }
-      });
-    }
-
-    // ============================================
-    // HANDLE RECONNECTION
-    // ============================================
-    socket.on('disconnect', () => {
-      console.log('Connection lost, attempting reconnect...');
-    });
-
-    socket.on('connect', () => {
-      // If was already joined, rejoin
-      if (studentId && sessionId) {
-        const name = document.getElementById('student-name').value;
-        socket.emit('student-join', {
-          sessionId: sessionId,
-          studentName: name || 'Qayta ulanish',
-          device: deviceModel
-        });
-      }
-    });
   </script>
 </body>
 </html>

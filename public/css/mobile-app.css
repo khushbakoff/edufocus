@@ -1,0 +1,704 @@
+/* ==========================================================================
+   EduFocus Mobile App Design System
+   Inspired by Ronas IT UI/UX — Clean, Modern, Electric Lime & Deep Charcoal
+   ========================================================================== */
+
+:root {
+  --app-bg: #F5F6F9;
+  --app-card: #FFFFFF;
+  --app-dark: #111827;
+  --app-dark-card: #161F30;
+  --app-lime: #D4F637;
+  --app-lime-hover: #C5E929;
+  --app-lime-text: #111827;
+  --app-border: #E8ECF2;
+  --app-text-primary: #111827;
+  --app-text-secondary: #6B7280;
+  --app-text-muted: #9CA3AF;
+  --app-radius-sm: 12px;
+  --app-radius-md: 18px;
+  --app-radius-lg: 24px;
+  --app-radius-xl: 32px;
+  --app-radius-pill: 9999px;
+  --app-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.03);
+  --app-shadow-md: 0 8px 24px rgba(17, 24, 39, 0.06);
+  --app-shadow-lg: 0 16px 36px rgba(17, 24, 39, 0.08);
+}
+
+/* Reset & Base */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body.mobile-theme {
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--app-bg);
+  color: var(--app-text-primary);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* App Shell (Phone Container) */
+.mobile-app-shell {
+  width: 100%;
+  max-width: 440px;
+  min-height: 100vh;
+  background: var(--app-bg);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.05);
+  padding-bottom: 90px; /* space for bottom nav */
+}
+
+/* Phone Status Bar (iOS style 9:41) */
+.mobile-status-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 24px 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--app-text-primary);
+  letter-spacing: -0.2px;
+}
+
+.status-bar-icons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+
+/* App Header */
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 24px 16px;
+}
+
+.user-greeting-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-greeting-label {
+  font-size: 13px;
+  color: var(--app-text-secondary);
+  font-weight: 500;
+}
+
+.user-greeting-name {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--app-text-primary);
+  letter-spacing: -0.4px;
+}
+
+.header-action-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--app-card);
+  border: 1px solid var(--app-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: var(--app-text-primary);
+  cursor: pointer;
+  box-shadow: var(--app-shadow-sm);
+  position: relative;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.header-action-btn:active {
+  transform: scale(0.95);
+  background: #F3F4F6;
+}
+
+.header-action-dot {
+  position: absolute;
+  top: 10px;
+  right: 11px;
+  width: 8px;
+  height: 8px;
+  background: var(--app-lime);
+  border: 2px solid var(--app-card);
+  border-radius: 50%;
+}
+
+/* Main Balance / Focus Hero Card */
+.hero-balance-card {
+  background: var(--app-card);
+  border-radius: var(--radius-xl, 30px);
+  padding: 24px;
+  margin: 0 20px 20px;
+  box-shadow: var(--app-shadow-md);
+  border: 1px solid rgba(232, 236, 242, 0.8);
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-balance-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.hero-balance-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--app-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.hero-balance-value {
+  font-size: 40px;
+  font-weight: 800;
+  color: var(--app-text-primary);
+  letter-spacing: -1px;
+  line-height: 1.1;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.hero-balance-pill-btn {
+  width: 100%;
+  background: var(--app-dark);
+  color: #FFFFFF;
+  border: none;
+  border-radius: var(--app-radius-pill);
+  padding: 16px;
+  font-size: 15px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 6px 16px rgba(17, 24, 39, 0.15);
+}
+
+.hero-balance-pill-btn:active {
+  transform: scale(0.98);
+  background: #000000;
+}
+
+/* Cards Carousel Section */
+.section-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 24px 12px;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--app-text-primary);
+  letter-spacing: -0.3px;
+}
+
+.section-action-link {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--app-text-secondary);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cards-carousel-container {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  padding: 4px 20px 16px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.cards-carousel-container::-webkit-scrollbar {
+  display: none;
+}
+
+/* Card 1: Electric Lime Card (Ronas IT Iconic) */
+.fin-card {
+  flex: 0 0 240px;
+  height: 145px;
+  border-radius: var(--app-radius-lg);
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  scroll-snap-align: start;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--app-shadow-md);
+  transition: transform 0.2s ease;
+}
+
+.fin-card:active {
+  transform: scale(0.98);
+}
+
+.card-lime {
+  background: var(--app-lime);
+  color: var(--app-lime-text);
+  border: 1px solid rgba(0,0,0,0.05);
+}
+
+.card-lime::before {
+  content: 'EDUFOCUS';
+  position: absolute;
+  right: -20px;
+  bottom: -15px;
+  font-size: 52px;
+  font-weight: 900;
+  color: rgba(0, 0, 0, 0.06);
+  letter-spacing: -1px;
+  pointer-events: none;
+}
+
+.card-dark {
+  background: var(--app-dark);
+  color: #FFFFFF;
+}
+
+.card-dark::before {
+  content: 'FOCUS';
+  position: absolute;
+  right: -10px;
+  bottom: -15px;
+  font-size: 52px;
+  font-weight: 900;
+  color: rgba(255, 255, 255, 0.04);
+  letter-spacing: -1px;
+  pointer-events: none;
+}
+
+.card-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-brand {
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: -0.3px;
+}
+
+.card-chip {
+  width: 28px;
+  height: 20px;
+  border-radius: 4px;
+  background: rgba(0,0,0,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-dark .card-chip {
+  background: rgba(255,255,255,0.15);
+}
+
+.card-middle-label {
+  font-size: 11px;
+  font-weight: 600;
+  opacity: 0.75;
+  text-transform: uppercase;
+}
+
+.card-middle-val {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.2px;
+}
+
+.card-bottom-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.card-pill-tag {
+  background: rgba(0, 0, 0, 0.1);
+  padding: 4px 10px;
+  border-radius: var(--app-radius-pill);
+  font-size: 11px;
+}
+
+.card-dark .card-pill-tag {
+  background: rgba(255, 255, 255, 0.12);
+  color: #FFFFFF;
+}
+
+/* Actions List Section (Ronas IT style menu items) */
+.action-list-card {
+  background: var(--app-card);
+  border-radius: var(--radius-xl, 30px);
+  padding: 8px 12px;
+  margin: 0 20px 20px;
+  box-shadow: var(--app-shadow-md);
+  border: 1px solid rgba(232, 236, 242, 0.8);
+}
+
+.action-row-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 12px;
+  border-radius: var(--app-radius-md);
+  cursor: pointer;
+  transition: background 0.15s ease;
+  text-decoration: none;
+  color: inherit;
+  border-bottom: 1px solid #F3F4F6;
+}
+
+.action-row-item:last-child {
+  border-bottom: none;
+}
+
+.action-row-item:active {
+  background: #F8F9FA;
+}
+
+.action-icon-box {
+  width: 46px;
+  height: 46px;
+  border-radius: var(--app-radius-md);
+  background: #F3F4F6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.action-icon-box.lime {
+  background: var(--app-lime);
+  color: var(--app-lime-text);
+}
+
+.action-icon-box.dark {
+  background: var(--app-dark);
+  color: #FFFFFF;
+}
+
+.action-content-wrap {
+  flex: 1;
+}
+
+.action-item-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--app-text-primary);
+  margin-bottom: 2px;
+}
+
+.action-item-subtitle {
+  font-size: 12px;
+  color: var(--app-text-secondary);
+}
+
+.action-chevron {
+  font-size: 16px;
+  color: var(--app-text-muted);
+  font-weight: 700;
+}
+
+/* Floating Bottom Navigation Bar */
+.mobile-bottom-nav {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 32px);
+  max-width: 400px;
+  height: 66px;
+  background: #FFFFFF;
+  border-radius: var(--app-radius-pill);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.12);
+  border: 1px solid rgba(232, 236, 242, 0.9);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 0 12px;
+  z-index: 990;
+}
+
+.nav-tab-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: var(--app-radius-pill);
+  color: var(--app-text-secondary);
+  transition: all 0.2s ease;
+}
+
+.nav-tab-icon {
+  font-size: 20px;
+  margin-bottom: 2px;
+}
+
+.nav-tab-label {
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.nav-tab-btn.active {
+  color: var(--app-dark);
+}
+
+.nav-tab-btn.active .nav-tab-icon {
+  transform: translateY(-1px);
+}
+
+/* ==========================================================================
+   Full Screen Focus & Lock State (Ronas IT Aesthetic)
+   ========================================================================== */
+.focus-lock-container {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.focus-ring-wrapper {
+  position: relative;
+  width: 220px;
+  height: 220px;
+  margin: 20px auto 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.focus-pulse-glow {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(212, 246, 55, 0.25) 0%, rgba(212, 246, 55, 0) 70%);
+  animation: pulseGlow 2.5s infinite ease-in-out;
+}
+
+@keyframes pulseGlow {
+  0%, 100% { transform: scale(0.9); opacity: 0.6; }
+  50% { transform: scale(1.1); opacity: 1; }
+}
+
+.focus-circle-svg {
+  transform: rotate(-90deg);
+}
+
+.focus-timer-text-wrap {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.focus-timer-digits {
+  font-size: 42px;
+  font-weight: 900;
+  color: var(--app-dark);
+  letter-spacing: -1px;
+}
+
+.focus-timer-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--app-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.focus-badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--app-dark);
+  color: #FFFFFF;
+  padding: 8px 18px;
+  border-radius: var(--app-radius-pill);
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+
+.focus-badge-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--app-lime);
+  box-shadow: 0 0 8px var(--app-lime);
+}
+
+.focus-warning-notice {
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
+  border-radius: var(--app-radius-md);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: #92400E;
+  margin-top: 14px;
+  width: 100%;
+  text-align: left;
+}
+
+/* Modals & Dialogs (Ronas IT style) */
+.mobile-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(17, 24, 39, 0.6);
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end; /* bottom sheet feel on mobile */
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.mobile-modal-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.mobile-bottom-sheet {
+  width: 100%;
+  max-width: 440px;
+  background: #FFFFFF;
+  border-radius: 32px 32px 0 0;
+  padding: 24px;
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.15);
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.mobile-modal-overlay.active .mobile-bottom-sheet {
+  transform: translateY(0);
+}
+
+.sheet-handle {
+  width: 38px;
+  height: 4px;
+  background: #E5E7EB;
+  border-radius: 2px;
+  margin: 0 auto 16px;
+}
+
+.sheet-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--app-text-primary);
+  margin-bottom: 6px;
+  letter-spacing: -0.3px;
+}
+
+.sheet-subtitle {
+  font-size: 13px;
+  color: var(--app-text-secondary);
+  margin-bottom: 20px;
+}
+
+/* Form Inputs in Mobile */
+.mobile-input-field {
+  width: 100%;
+  background: #F3F4F6;
+  border: 1.5px solid transparent;
+  border-radius: var(--app-radius-md);
+  padding: 16px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--app-text-primary);
+  outline: none;
+  transition: all 0.2s ease;
+  margin-bottom: 14px;
+}
+
+.mobile-input-field:focus {
+  background: #FFFFFF;
+  border-color: var(--app-dark);
+  box-shadow: 0 0 0 4px rgba(17, 24, 39, 0.05);
+}
+
+.mobile-btn-lime {
+  width: 100%;
+  background: var(--app-lime);
+  color: var(--app-lime-text);
+  border: none;
+  border-radius: var(--app-radius-pill);
+  padding: 16px;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.mobile-btn-lime:active {
+  transform: scale(0.98);
+  background: var(--app-lime-hover);
+}
+
+.mobile-btn-dark {
+  width: 100%;
+  background: var(--app-dark);
+  color: #FFFFFF;
+  border: none;
+  border-radius: var(--app-radius-pill);
+  padding: 16px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.mobile-btn-dark:active {
+  transform: scale(0.98);
+  background: #000000;
+}
