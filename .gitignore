@@ -2,3 +2,9 @@ node_modules/
 .DS_Store
 .env
 npm-debug.log*
+
+# Android build outputs & local sdk paths
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
