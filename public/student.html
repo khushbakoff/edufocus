@@ -28,6 +28,18 @@
   <!-- ======================== -->
   <div id="screen-join" class="student-page">
     <div class="student-card">
+      <!-- App Install Banner (Always Visible) -->
+      <div style="background: rgba(59, 130, 246, 0.12); border: 1px solid rgba(59, 130, 246, 0.35); border-radius: var(--radius-lg); padding: 12px 14px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: var(--transition)" onclick="triggerPWAInstall()" id="top-install-banner">
+        <span style="font-size: 24px">📲</span>
+        <div style="flex: 1; text-align: left">
+          <div style="font-weight: 700; font-size: 14px; color: var(--blue-400)">EduFocus Ilovasini O'rnatish</div>
+          <div style="font-size: 11px; color: var(--text-muted)">Telefonga mustaqil ilova qilib yuklash</div>
+        </div>
+        <button type="button" class="btn btn-primary btn-sm" style="pointer-events: none; padding: 6px 12px; font-size: 12px">
+          O'rnatish
+        </button>
+      </div>
+
       <div class="student-logo">
         <div class="logo-icon" style="width:32px;height:32px;font-size:16px">🎓</div>
         <span>EduFocus</span>
@@ -39,6 +51,16 @@
       <div id="join-error" class="form-error" style="text-align:center"></div>
 
       <form id="join-form">
+        <!-- Session code field (visible if no URL session parameter) -->
+        <div class="form-group" id="manual-session-group" style="display: none">
+          <label class="form-label" for="manual-session-code">Dars (Sessiya) Kodi</label>
+          <div class="input-icon-wrap">
+            <span class="input-icon">🔑</span>
+            <input type="text" id="manual-session-code" class="form-input" placeholder="Masalan: 44275fc5">
+          </div>
+          <span style="font-size: 11px; color: var(--text-muted)">Ustoz bergan 8 xonali dars kodini kiriting</span>
+        </div>
+
         <div class="form-group">
           <label class="form-label" for="student-name">Ismingizni kiriting</label>
           <div class="input-icon-wrap">
@@ -61,12 +83,6 @@
         <button type="submit" class="btn btn-primary btn-lg" style="width:100%" id="join-btn">
           Darsga Qo'shilish
         </button>
-
-        <div id="pwa-install-banner" style="display: none; margin-top: 14px">
-          <button type="button" class="btn btn-outline" style="width: 100%; border-color: rgba(59, 130, 246, 0.4); color: var(--blue-400); font-size: 13px" onclick="installPWA()">
-            📲 Ilovani Telefonga O'rnatish
-          </button>
-        </div>
       </form>
     </div>
   </div>
@@ -131,13 +147,69 @@
   </div>
 
   <!-- ======================== -->
-  <!-- ======================== -->
-  <!-- SCREEN: ERROR -->
+  <!-- SCREEN: ERROR / SESSION INPUT -->
   <!-- ======================== -->
   <div id="screen-error" class="end-screen" style="display:none">
-    <div class="end-icon">❌</div>
-    <h1 class="end-title" style="color: var(--red-400)">Xatolik</h1>
-    <p class="end-message" id="error-message">Sessiya topilmadi yoki tugagan</p>
+    <div class="end-icon" id="error-icon">🔑</div>
+    <h1 class="end-title" id="error-title" style="color: var(--blue-400)">Dars Kodi Talab Qilinadi</h1>
+    <p class="end-message" id="error-message">Darsga kirish uchun ustoz taqdim etgan kodni kiriting yoki ilovani o'rnating</p>
+
+    <div style="max-width: 320px; margin: 0 auto 20px">
+      <button type="button" class="btn btn-primary btn-lg" style="width: 100%; margin-bottom: 12px" onclick="switchToManualSession()">
+        🔑 Kodni Kiritish
+      </button>
+      <button type="button" class="btn btn-outline" style="width: 100%" onclick="triggerPWAInstall()">
+        📲 Ilovani O'rnatish
+      </button>
+    </div>
+
+    <a href="/" style="font-size: 13px; color: var(--text-muted); text-decoration: none">
+      🏠 Bosh sahifaga qaytish
+    </a>
+  </div>
+
+  <!-- Install Guide Modal -->
+  <div id="install-guide-modal" class="modal-overlay">
+    <div class="modal" style="max-width: 440px; text-align: left">
+      <div class="modal-header">
+        <h3 class="modal-title" style="display: flex; align-items: center; gap: 8px">
+          <span>📲</span> EduFocus Ilovasini O'rnatish
+        </h3>
+        <button class="modal-close" onclick="closeInstallGuide()">✕</button>
+      </div>
+
+      <div style="padding: 12px 0">
+        <button type="button" id="modal-direct-install-btn" class="btn btn-primary btn-lg" style="width: 100%; margin-bottom: 20px; justify-content: center" onclick="performDirectInstall()">
+          🚀 Hoziroq O'rnatish
+        </button>
+
+        <div style="font-size: 13px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px">
+          Qo'lda o'rnatish bo'yicha ko'rsatma:
+        </div>
+
+        <!-- Android Guide -->
+        <div style="background: var(--bg-tertiary); border-radius: var(--radius-md); padding: 12px 14px; margin-bottom: 10px; border-left: 3px solid var(--green-400)">
+          <div style="font-weight: 700; font-size: 13px; color: var(--green-400); margin-bottom: 4px">🤖 Android (Chrome) uchun:</div>
+          <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.5">
+            1. Brauzerning yuqori o'ng burchagidagi <strong>⋮ (3 nuqta)</strong> menyusini bosing.<br>
+            2. <strong>"Ilovani o'rnatish"</strong> (yoki "Bosh ekranga qo'shish") tugmasini bosing.
+          </div>
+        </div>
+
+        <!-- iOS Guide -->
+        <div style="background: var(--bg-tertiary); border-radius: var(--radius-md); padding: 12px 14px; border-left: 3px solid var(--blue-400)">
+          <div style="font-weight: 700; font-size: 13px; color: var(--blue-400); margin-bottom: 4px">🍎 iPhone (Safari) uchun:</div>
+          <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.5">
+            1. Safari brauzerining pastidagi <strong>⎋ (Ulashish / Share)</strong> tugmasini bosing.<br>
+            2. <strong>"Bosh ekranga qo'shish" (Add to Home Screen)</strong> tugmasini bosing.
+          </div>
+        </div>
+      </div>
+
+      <button type="button" class="btn btn-outline" style="width: 100%; margin-top: 10px" onclick="closeInstallGuide()">
+        Tushundim
+      </button>
+    </div>
   </div>
 
   <!-- ======================== -->
@@ -208,11 +280,16 @@
     // GET SESSION ID FROM URL
     // ============================================
     const urlParams = new URLSearchParams(window.location.search);
-    const sessionId = urlParams.get('session');
+    let sessionId = urlParams.get('session');
 
     if (!sessionId) {
-      showScreen('error');
-      document.getElementById('error-message').textContent = 'Noto\'g\'ri havola. QR kodni qaytadan skanerlang.';
+      // Don't show error screen! Allow manual session code entry or app install!
+      const manualGroup = document.getElementById('manual-session-group');
+      if (manualGroup) manualGroup.style.display = 'block';
+      const infoEl = document.getElementById('session-info');
+      if (infoEl) infoEl.textContent = 'Dars kodi va ismingizni kiriting';
+    } else {
+      loadSessionInfo();
     }
 
     // ============================================
@@ -235,23 +312,55 @@
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
-      const banner = document.getElementById('pwa-install-banner');
-      if (banner) banner.style.display = 'block';
+      const banner = document.getElementById('top-install-banner');
+      if (banner) banner.style.display = 'flex';
+      const directBtn = document.getElementById('modal-direct-install-btn');
+      if (directBtn) directBtn.style.display = 'flex';
     });
 
-    function installPWA() {
+    function triggerPWAInstall() {
       if (deferredPrompt) {
         deferredPrompt.prompt();
-        deferredPrompt.userChoice.then((choice) => {
-          if (choice.outcome === 'accepted') {
-            const banner = document.getElementById('pwa-install-banner');
-            if (banner) banner.style.display = 'none';
-          }
+        deferredPrompt.userChoice.then(() => {
           deferredPrompt = null;
         });
       } else {
-        alert('Ilovani o\'rnatish uchun brauzeringiz menyusi (3 nuqta) orqali "Bosh ekranga qo\'shish" (Add to Home Screen) tugmasini bosing.');
+        openInstallGuideModal();
       }
+    }
+
+    function openInstallGuideModal() {
+      const modal = document.getElementById('install-guide-modal');
+      if (modal) modal.classList.add('active');
+    }
+
+    function closeInstallGuide() {
+      const modal = document.getElementById('install-guide-modal');
+      if (modal) modal.classList.remove('active');
+    }
+
+    function performDirectInstall() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(() => {
+          deferredPrompt = null;
+          closeInstallGuide();
+        });
+      } else {
+        alert('Ilovani o\'rnatish uchun brauzeringizning 3 nuqta (⋮) menyusi orqali "Ilovani o\'rnatish" yoki "Bosh ekranga qo\'shish" tugmasini bosing.');
+      }
+    }
+
+    function switchToManualSession() {
+      showScreen('join');
+      const manualGroup = document.getElementById('manual-session-group');
+      if (manualGroup) manualGroup.style.display = 'block';
+      const infoEl = document.getElementById('session-info');
+      if (infoEl) infoEl.textContent = 'Dars kodi va ismingizni kiriting';
+      setTimeout(() => {
+        const inp = document.getElementById('manual-session-code');
+        if (inp) inp.focus();
+      }, 100);
     }
 
     // ============================================
@@ -334,6 +443,17 @@
     // ============================================
     document.getElementById('join-form').addEventListener('submit', (e) => {
       e.preventDefault();
+
+      if (!sessionId) {
+        const manualCode = document.getElementById('manual-session-code').value.trim();
+        if (!manualCode) {
+          const errEl = document.getElementById('join-error');
+          errEl.textContent = 'Iltimos, dars kodini kiriting!';
+          errEl.style.display = 'block';
+          return;
+        }
+        sessionId = manualCode;
+      }
 
       const name = document.getElementById('student-name').value.trim();
       if (!name) return;
