@@ -374,6 +374,28 @@ app.post('/api/sessions/:id/lock', authMiddleware, (req, res) => {
   res.json({ success: true });
 });
 
+// App & Tool Remote Control (Calculator, Chrome, Whitelist)
+app.post('/api/sessions/:id/app-control', authMiddleware, (req, res) => {
+  const session = db.sessions.find(s => s.id === req.params.id && s.teacherId === req.teacherId);
+  if (!session) return res.status(404).json({ error: 'Sessiya topilmadi' });
+
+  const { tool, action, url, appName } = req.body;
+  // tool: 'calculator' | 'browser' | 'lock_all'
+  // action: 'open' | 'close'
+
+  session.allowedTool = (action === 'open') ? { tool, url: url || null, appName: appName || tool } : null;
+
+  io.to(`session-${session.id}`).emit('app-control', {
+    tool,
+    action,
+    url: url || null,
+    appName: appName || tool,
+    timestamp: new Date().toISOString()
+  });
+
+  res.json({ success: true, allowedTool: session.allowedTool });
+});
+
 // Get session history / stats
 app.get('/api/stats', authMiddleware, (req, res) => {
   const teacherSessions = db.sessions.filter(s => s.teacherId === req.teacherId);
@@ -457,7 +479,8 @@ io.on('connection', (socket) => {
         questions: session.activeQuiz.questions.map(q => ({ id: q.id, text: q.text, options: q.options })),
         timeLimit: session.activeQuiz.timeLimit
       } : null,
-      activeMaterial: session.activeMaterial || null
+      activeMaterial: session.activeMaterial || null,
+      allowedTool: session.allowedTool || null
     });
   });
 
@@ -574,6 +597,23 @@ io.on('connection', (socket) => {
     socket.emit('material-broadcast-success', session.activeMaterial);
   });
 
+  // Teacher controls external apps / tools (Calculator, Chrome, Whitelist)
+  socket.on('teacher-app-control', (data) => {
+    const { sessionId, tool, action, url, appName } = data;
+    const session = db.sessions.find(s => s.id === sessionId);
+    if (!session) return;
+
+    session.allowedTool = (action === 'open') ? { tool, url: url || null, appName: appName || tool } : null;
+
+    io.to(`session-${sessionId}`).emit('app-control', {
+      tool,
+      action,
+      url: url || null,
+      appName: appName || tool,
+      timestamp: new Date().toISOString()
+    });
+  });
+
   // Teacher joins to monitor
   socket.on('teacher-monitor', (data) => {
     const { sessionId } = data;
@@ -586,6 +626,11 @@ io.on('connection', (socket) => {
     const { sessionId, studentId } = data;
     const session = db.sessions.find(s => s.id === sessionId);
     if (session) {
+      // If teacher has explicitly opened/allowed an external tool, don't count as violation
+      if (session.allowedTool) {
+        return;
+      }
+
       const student = session.students.find(s => s.id === studentId);
       if (student) {
         student.isActive = false;

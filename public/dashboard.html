@@ -180,6 +180,30 @@
                 </div>
               </div>
 
+              <!-- Left 2: App & Tool Remote Control (Kalkulyator, Brauzer, Blok) -->
+              <div class="card" style="margin-top: 16px; border: 1px solid rgba(212, 246, 55, 0.4)">
+                <div class="card-header">
+                  <div>
+                    <h3 class="card-title" style="margin: 0; font-size: 15px">📲 Ilovalar va Vositalarni Boshqarish</h3>
+                    <p style="font-size: 11px; color: var(--text-muted); margin: 2px 0 0">O'quvchi telefonida ilovalarga ruxsat berish</p>
+                  </div>
+                  <span id="active-tool-badge" class="badge" style="background: #1E293B; color: #94A3B8; font-size: 11px">Faqat Dars</span>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px">
+                  <button type="button" class="btn btn-outline" id="btn-ctrl-calc" onclick="teacherToggleCalculator()" style="display: flex; align-items: center; justify-content: space-between">
+                    <span>🧮 Kalkulyator</span>
+                    <span id="calc-status-tag" style="font-size: 11px; background: rgba(255,255,255,0.08); padding: 2px 8px; border-radius: 9999px">Yopiq</span>
+                  </button>
+                  <button type="button" class="btn btn-outline" id="btn-ctrl-browser" onclick="teacherOpenBrowserModal()" style="display: flex; align-items: center; justify-content: space-between">
+                    <span>🌐 Chrome / Dars Manbasi</span>
+                    <span id="browser-status-tag" style="font-size: 11px; background: rgba(255,255,255,0.08); padding: 2px 8px; border-radius: 9999px">Yopiq</span>
+                  </button>
+                  <button type="button" class="btn btn-outline" id="btn-ctrl-lockall" onclick="teacherLockAllTools()" style="color: #EF4444; border-color: rgba(239, 68, 68, 0.3)">
+                    🔒 Hamma Ilovalarni Yopish (Darsga Qaytish)
+                  </button>
+                </div>
+              </div>
+
               <!-- Right: Students & Stats -->
               <div>
                 <!-- Live Quiz Tracker (Shown when quiz is sent) -->
@@ -390,6 +414,30 @@
 
         <button type="button" class="btn btn-primary btn-lg" onclick="broadcastMaterial()" style="width: 100%">
           📤 Materialni O'quvchilarga Yuborish
+        </button>
+      </div>
+    </div>
+  <!-- Modal: Teacher Send Web Resource / App -->
+  <div id="teacher-browser-modal" class="modal-overlay" style="display: none">
+    <div class="modal" style="max-width: 440px">
+      <div class="modal-header">
+        <h3 class="modal-title">🌐 Dars Manbasini Ochish</h3>
+        <button class="modal-close" onclick="closeTeacherBrowserModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 14px">
+          O'quvchilar telefonida darsga oid veb-sahifa yoki ma'lumotnomani ochishga ruxsat bering.
+        </p>
+        <div class="form-group" style="margin-bottom: 14px">
+          <label class="form-label">Manba Nomi</label>
+          <input type="text" id="teacher-browser-title" class="form-input" placeholder="Masalan: Fizika qonunlari jadvali" value="Dars manbasi">
+        </div>
+        <div class="form-group" style="margin-bottom: 16px">
+          <label class="form-label">Havola (URL)</label>
+          <input type="url" id="teacher-browser-url" class="form-input" placeholder="https://uz.wikipedia.org/..." value="https://uz.wikipedia.org">
+        </div>
+        <button type="button" class="btn btn-success" style="width: 100%" onclick="teacherSendBrowserResource()">
+          🚀 O'quvchilarda Ochish
         </button>
       </div>
     </div>
@@ -739,6 +787,113 @@
         }
       } catch (err) {
         showToast('Xatolik yuz berdi', 'error', '❌');
+      }
+    }
+
+    // ============================================
+    // TEACHER APP & TOOL REMOTE CONTROL
+    // ============================================
+    let activeTool = null; // null | 'calculator' | 'browser'
+
+    async function sendAppControl(tool, action, url, appName) {
+      if (!currentSession) return;
+      try {
+        const res = await fetch(`/api/sessions/${currentSession.id}/app-control`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ tool, action, url, appName })
+        });
+        const data = await res.json();
+        return data;
+      } catch (err) {
+        showToast('Ilova buyrug\'ini yuborishda xatolik', 'error', '❌');
+      }
+    }
+
+    async function teacherToggleCalculator() {
+      if (!currentSession) {
+        showToast('Avval dars sessiyasini boshlang!', 'warning', '⚠️');
+        return;
+      }
+      if (activeTool === 'calculator') {
+        await sendAppControl('calculator', 'close');
+        activeTool = null;
+        updateToolUI();
+        showToast('Kalkulyator yopildi', 'info', '🧮');
+        addActivity('🧮', 'Kalkulyatordan foydalanish to\'xtatildi');
+      } else {
+        await sendAppControl('calculator', 'open', null, 'Kalkulyator');
+        activeTool = 'calculator';
+        updateToolUI();
+        showToast('Barcha o\'quvchilarda kalkulyator ochildi!', 'success', '🧮');
+        addActivity('🧮', 'Barcha o\'quvchilarga kalkulyator ochildi');
+      }
+    }
+
+    function teacherOpenBrowserModal() {
+      if (!currentSession) {
+        showToast('Avval dars sessiyasini boshlang!', 'warning', '⚠️');
+        return;
+      }
+      document.getElementById('teacher-browser-modal').style.display = 'flex';
+    }
+
+    function closeTeacherBrowserModal() {
+      document.getElementById('teacher-browser-modal').style.display = 'none';
+    }
+
+    async function teacherSendBrowserResource() {
+      const url = document.getElementById('teacher-browser-url').value.trim();
+      const title = document.getElementById('teacher-browser-title').value.trim() || 'Dars manbasi';
+      if (!url) {
+        showToast('Iltimos, manba havolasini kiriting', 'warning', '⚠️');
+        return;
+      }
+      closeTeacherBrowserModal();
+      await sendAppControl('browser', 'open', url, title);
+      activeTool = 'browser';
+      updateToolUI();
+      showToast(`O'quvchilarda "${title}" ochildi!`, 'success', '🌐');
+      addActivity('🌐', `O'quvchilarga "${title}" manbasi ochildi (${url})`);
+    }
+
+    async function teacherLockAllTools() {
+      if (!currentSession) return;
+      await sendAppControl('lock_all', 'close');
+      activeTool = null;
+      updateToolUI();
+      showToast('Barcha qo\'shimcha ilovalar yopildi. Diqqat darsda!', 'warning', '🔒');
+      addActivity('🔒', 'Hamma ilovalar yopildi, dars rejimiga qaytildi');
+    }
+
+    function updateToolUI() {
+      const badge = document.getElementById('active-tool-badge');
+      const calcTag = document.getElementById('calc-status-tag');
+      const browserTag = document.getElementById('browser-status-tag');
+      const btnCalc = document.getElementById('btn-ctrl-calc');
+      const btnBrowser = document.getElementById('btn-ctrl-browser');
+
+      if (activeTool === 'calculator') {
+        if (badge) { badge.textContent = '🧮 Kalkulyator Faol'; badge.style.background = '#059669'; badge.style.color = '#FFF'; }
+        if (calcTag) { calcTag.textContent = 'Ochiq'; calcTag.style.background = '#10B981'; calcTag.style.color = '#FFF'; }
+        if (browserTag) { browserTag.textContent = 'Yopiq'; browserTag.style.background = 'rgba(255,255,255,0.08)'; browserTag.style.color = 'inherit'; }
+        if (btnCalc) btnCalc.style.borderColor = '#10B981';
+        if (btnBrowser) btnBrowser.style.borderColor = 'var(--border-light)';
+      } else if (activeTool === 'browser') {
+        if (badge) { badge.textContent = '🌐 Brauzer Faol'; badge.style.background = '#2563EB'; badge.style.color = '#FFF'; }
+        if (calcTag) { calcTag.textContent = 'Yopiq'; calcTag.style.background = 'rgba(255,255,255,0.08)'; calcTag.style.color = 'inherit'; }
+        if (browserTag) { browserTag.textContent = 'Ochiq'; browserTag.style.background = '#3B82F6'; browserTag.style.color = '#FFF'; }
+        if (btnCalc) btnCalc.style.borderColor = 'var(--border-light)';
+        if (btnBrowser) btnBrowser.style.borderColor = '#3B82F6';
+      } else {
+        if (badge) { badge.textContent = 'Faqat Dars'; badge.style.background = '#1E293B'; badge.style.color = '#94A3B8'; }
+        if (calcTag) { calcTag.textContent = 'Yopiq'; calcTag.style.background = 'rgba(255,255,255,0.08)'; calcTag.style.color = 'inherit'; }
+        if (browserTag) { browserTag.textContent = 'Yopiq'; browserTag.style.background = 'rgba(255,255,255,0.08)'; browserTag.style.color = 'inherit'; }
+        if (btnCalc) btnCalc.style.borderColor = 'var(--border-light)';
+        if (btnBrowser) btnBrowser.style.borderColor = 'var(--border-light)';
       }
     }
 

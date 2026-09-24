@@ -333,7 +333,14 @@
           <input type="text" id="manual-session-code" class="mobile-input-field" placeholder="Masalan: 44275fc5">
         </div>
 
-        <div style="margin-bottom: 16px">
+        <div id="saved-profile-box" style="display: none; background: #ECFDF5; border: 1px solid #A7F3D0; border-radius: var(--app-radius-md); padding: 12px 14px; margin-bottom: 14px">
+          <div style="display: flex; justify-content: space-between; align-items: center">
+            <span style="font-size: 13px; font-weight: 700; color: #065F46">👤 O'quvchi: <strong id="saved-name-display">—</strong></span>
+            <button type="button" onclick="editStudentName()" style="background: none; border: none; font-size: 11px; font-weight: 700; color: #059669; cursor: pointer; text-decoration: underline">O'zgartirish</button>
+          </div>
+        </div>
+
+        <div id="name-input-group" style="margin-bottom: 16px">
           <label style="font-size: 12px; font-weight: 700; color: var(--app-text-secondary); margin-bottom: 4px; display: block">Ismingiz va Familiyangiz</label>
           <input type="text" id="student-name" class="mobile-input-field" placeholder="Masalan: Ali Karimov" required autocomplete="name">
         </div>
@@ -481,6 +488,90 @@
         Yopish
       </button>
     </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- BOTTOM SHEET 5: NEO CALCULATOR MODAL         -->
+  <!-- ============================================ -->
+  <div id="student-calculator-modal" class="mobile-modal-overlay">
+    <div class="mobile-bottom-sheet" style="padding-bottom: 28px">
+      <div class="sheet-handle"></div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px">
+        <div style="display: flex; align-items: center; gap: 8px">
+          <span style="font-size: 22px">🧮</span>
+          <h3 class="sheet-title" style="margin: 0; font-size: 18px">Kalkulyator</h3>
+        </div>
+        <span style="font-size: 11px; background: #ECFDF5; color: #059669; padding: 3px 8px; border-radius: 9999px; font-weight: 700">Ustoz Ruxsat Berdi</span>
+      </div>
+
+      <!-- Calculator Display -->
+      <div style="background: #111827; border-radius: var(--app-radius-lg); padding: 18px 20px; margin-bottom: 14px; text-align: right">
+        <div id="calc-expression" style="font-size: 13px; color: #9CA3AF; min-height: 18px; font-family: monospace"></div>
+        <div id="calc-display" style="font-size: 32px; font-weight: 800; color: #FFFFFF; font-family: monospace">0</div>
+      </div>
+
+      <!-- Calculator Keypad (4x5 grid) -->
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px">
+        <button type="button" class="calc-btn op" onclick="calcInput('C')">C</button>
+        <button type="button" class="calc-btn op" onclick="calcInput('(')">(</button>
+        <button type="button" class="calc-btn op" onclick="calcInput(')')">)</button>
+        <button type="button" class="calc-btn op" onclick="calcInput('/')">÷</button>
+
+        <button type="button" class="calc-btn num" onclick="calcInput('7')">7</button>
+        <button type="button" class="calc-btn num" onclick="calcInput('8')">8</button>
+        <button type="button" class="calc-btn num" onclick="calcInput('9')">9</button>
+        <button type="button" class="calc-btn op" onclick="calcInput('*')">×</button>
+
+        <button type="button" class="calc-btn num" onclick="calcInput('4')">4</button>
+        <button type="button" class="calc-btn num" onclick="calcInput('5')">5</button>
+        <button type="button" class="calc-btn num" onclick="calcInput('6')">6</button>
+        <button type="button" class="calc-btn op" onclick="calcInput('-')">−</button>
+
+        <button type="button" class="calc-btn num" onclick="calcInput('1')">1</button>
+        <button type="button" class="calc-btn num" onclick="calcInput('2')">2</button>
+        <button type="button" class="calc-btn num" onclick="calcInput('3')">3</button>
+        <button type="button" class="calc-btn op" onclick="calcInput('+')">+</button>
+
+        <button type="button" class="calc-btn num" onclick="calcInput('0')" style="grid-column: span 2">0</button>
+        <button type="button" class="calc-btn num" onclick="calcInput('.')">.</button>
+        <button type="button" class="calc-btn equal" onclick="calcInput('=')">=</button>
+      </div>
+
+      <button type="button" class="mobile-btn-dark" style="margin-top: 14px; background: #F3F4F6; color: var(--app-dark)" onclick="closeStudentCalculator()">
+        Yopish (Darsga Qaytish)
+      </button>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- BOTTOM SHEET 6: RESOURCE BROWSER MODAL       -->
+  <!-- ============================================ -->
+  <div id="student-browser-modal" class="mobile-modal-overlay">
+    <div class="mobile-bottom-sheet" style="padding-bottom: 24px">
+      <div class="sheet-handle"></div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px">
+        <div style="display: flex; align-items: center; gap: 8px">
+          <span style="font-size: 22px">🌐</span>
+          <h3 class="sheet-title" id="browser-modal-title" style="margin: 0; font-size: 18px">Dars Manbasi</h3>
+        </div>
+        <span style="font-size: 11px; background: #EFF6FF; color: #2563EB; padding: 3px 8px; border-radius: 9999px; font-weight: 700">Ustoz Ruxsat Berdi</span>
+      </div>
+      <p style="font-size: 13px; color: var(--app-text-secondary); margin-bottom: 16px" id="browser-modal-desc">
+        Ustoz ushbu dars manbasidan foydalanishga ruxsat berdi.
+      </p>
+      <a id="browser-modal-link" href="#" target="_blank" class="mobile-btn-lime" style="text-decoration: none; margin-bottom: 10px; font-size: 15px">
+        🚀 Sahifani Ochish (Tashqi Brauzerda)
+      </a>
+      <button type="button" class="mobile-btn-dark" style="background: #F3F4F6; color: var(--app-dark)" onclick="closeStudentBrowser()">
+        Yopish
+      </button>
+    </div>
+  </div>
+
+  <!-- Floating Toast Banner for Remote Alerts -->
+  <div id="floating-toast-alert" style="display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #111827; color: #FFFFFF; padding: 12px 20px; border-radius: 9999px; font-size: 13px; font-weight: 700; z-index: 3000; box-shadow: 0 10px 30px rgba(0,0,0,0.25); border: 1px solid var(--app-lime)">
+    <span id="floating-toast-text">—</span>
+  </div>
   <!-- ============================================ -->
   <!-- FULLSCREEN IN-APP QR CODE CAMERA SCANNER     -->
   <!-- ============================================ -->
@@ -577,6 +668,30 @@
     let isLocked = true;
     let activeQuizData = null;
     let activeMaterialData = null;
+    let currentAllowedTool = null; // null | 'calculator' | 'browser'
+
+    // Name persistence (Ism-familiyani 1 marta kiritish)
+    const savedStudentName = localStorage.getItem('edufocus_student_name');
+    if (savedStudentName) {
+      const studentInput = document.getElementById('student-name');
+      if (studentInput) studentInput.value = savedStudentName;
+      const headerGreeting = document.getElementById('header-student-name');
+      if (headerGreeting) headerGreeting.textContent = savedStudentName;
+      const savedBox = document.getElementById('saved-profile-box');
+      if (savedBox) savedBox.style.display = 'block';
+      const savedDisplay = document.getElementById('saved-name-display');
+      if (savedDisplay) savedDisplay.textContent = savedStudentName;
+    }
+
+    function editStudentName() {
+      const savedBox = document.getElementById('saved-profile-box');
+      if (savedBox) savedBox.style.display = 'none';
+      const input = document.getElementById('student-name');
+      if (input) {
+        input.focus();
+        input.select();
+      }
+    }
 
     // Service Worker & PWA Install
     if ('serviceWorker' in navigator) {
@@ -738,6 +853,9 @@
       const name = document.getElementById('student-name').value.trim();
       if (!name) return;
 
+      // Remember name forever so student never has to type it again
+      localStorage.setItem('edufocus_student_name', name);
+
       const joinBtn = document.getElementById('join-btn');
       joinBtn.disabled = true;
       joinBtn.innerHTML = 'Ulanmoqda...';
@@ -784,6 +902,41 @@
       if (data.activeMaterial) {
         activeMaterialData = data.activeMaterial;
         showStudentMaterial(data.activeMaterial);
+      }
+
+      if (data.allowedTool) {
+        currentAllowedTool = data.allowedTool.tool;
+        if (data.allowedTool.tool === 'calculator') {
+          openStudentCalculator();
+        } else if (data.allowedTool.tool === 'browser') {
+          openStudentBrowser(data.allowedTool.url, data.allowedTool.appName);
+        }
+      }
+    });
+
+    // Remote App Control from Teacher (Calculator, Chrome, Whitelist)
+    socket.on('app-control', (data) => {
+      const { tool, action, url, appName } = data;
+      if (action === 'open') {
+        currentAllowedTool = tool;
+        if (tool === 'calculator') {
+          if (window.AndroidBridge && window.AndroidBridge.openCalculator) {
+            window.AndroidBridge.openCalculator();
+          }
+          openStudentCalculator();
+          showToastAlert('🧮 Ustoz kalkulyatorga ruxsat berdi!');
+        } else if (tool === 'browser') {
+          if (window.AndroidBridge && window.AndroidBridge.openBrowser) {
+            window.AndroidBridge.openBrowser(url || 'https://uz.wikipedia.org');
+          }
+          openStudentBrowser(url, appName);
+          showToastAlert(`🌐 Ustoz "${appName || 'Dars manbasi'}"ga ruxsat berdi!`);
+        }
+      } else if (action === 'close' || tool === 'lock_all') {
+        currentAllowedTool = null;
+        closeStudentCalculator();
+        closeStudentBrowser();
+        showToastAlert('🔒 Ustoz ilovalardan foydalanishni yakunladi. Diqqat darsda!');
       }
     });
 
@@ -954,6 +1107,11 @@
     let violationCount = 0;
     document.addEventListener('visibilitychange', () => {
       if (!studentId || !sessionId) return;
+
+      // If teacher has explicitly permitted Calculator or Browser, don't count violation!
+      if (currentAllowedTool) {
+        return;
+      }
 
       if (document.hidden) {
         violationCount++;
@@ -1241,7 +1399,19 @@
         // Load session metadata from server
         loadSessionInfo();
 
-        // Prompt join sheet
+        // Check if student name is already saved (1-marta kiritish)
+        const savedName = localStorage.getItem('edufocus_student_name');
+        if (savedName) {
+          showToastAlert(`Xush kelibsiz, ${savedName}! Darsga ulanmoqda... 🚀`);
+          socket.emit('student-join', {
+            sessionId: sessionId,
+            studentName: savedName,
+            device: deviceModel
+          });
+          return;
+        }
+
+        // If first time, open join sheet once to get name
         openJoinSheet();
 
         const studentInput = document.getElementById('student-name');
@@ -1276,6 +1446,77 @@
         }
       } catch (e) {
         alert('Ushbu qurilmada chiroqni dasturiy boshqarish qo\'llab-quvvatlanmaydi.');
+      }
+    }
+    // ============================================
+    // NEO CALCULATOR & BROWSER CONTROLS
+    // ============================================
+    let calcCurrent = '0';
+    let calcExpr = '';
+
+    function openStudentCalculator() {
+      const modal = document.getElementById('student-calculator-modal');
+      if (modal) modal.classList.add('active');
+    }
+
+    function closeStudentCalculator() {
+      const modal = document.getElementById('student-calculator-modal');
+      if (modal) modal.classList.remove('active');
+    }
+
+    function openStudentBrowser(url, title) {
+      const modal = document.getElementById('student-browser-modal');
+      const titleEl = document.getElementById('browser-modal-title');
+      const linkEl = document.getElementById('browser-modal-link');
+      if (titleEl) titleEl.textContent = title || 'Dars Manbasi';
+      if (linkEl) linkEl.href = url || 'https://uz.wikipedia.org';
+      if (modal) modal.classList.add('active');
+    }
+
+    function closeStudentBrowser() {
+      const modal = document.getElementById('student-browser-modal');
+      if (modal) modal.classList.remove('active');
+    }
+
+    function calcInput(val) {
+      const disp = document.getElementById('calc-display');
+      const expr = document.getElementById('calc-expression');
+
+      if (val === 'C') {
+        calcCurrent = '0';
+        calcExpr = '';
+      } else if (val === '=') {
+        try {
+          const clean = calcCurrent.replace(/×/g, '*').replace(/÷/g, '/').replace(/−/g, '-');
+          const res = Function(`'use strict'; return (${clean})`)();
+          calcExpr = calcCurrent + ' =';
+          calcCurrent = String(Number.isFinite(res) ? Math.round(res * 100000000) / 100000000 : 'Error');
+        } catch (e) {
+          calcCurrent = 'Xato';
+        }
+      } else {
+        if (calcCurrent === '0' && !isNaN(val)) {
+          calcCurrent = val;
+        } else {
+          calcCurrent += val;
+        }
+      }
+
+      if (disp) disp.textContent = calcCurrent;
+      if (expr) expr.textContent = calcExpr;
+    }
+
+    let toastTimeout = null;
+    function showToastAlert(msg) {
+      const toast = document.getElementById('floating-toast-alert');
+      const text = document.getElementById('floating-toast-text');
+      if (toast && text) {
+        text.textContent = msg;
+        toast.style.display = 'block';
+        if (toastTimeout) clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => {
+          toast.style.display = 'none';
+        }, 4000);
       }
     }
   </script>

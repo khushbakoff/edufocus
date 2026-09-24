@@ -927,3 +927,36 @@ body.mobile-theme {
   transform: scale(0.97);
 }
 
+/* Calculator Keypad */
+.calc-btn {
+  height: 54px;
+  border-radius: var(--app-radius-md);
+  font-size: 18px;
+  font-weight: 700;
+  border: 1px solid var(--app-border);
+  cursor: pointer;
+  transition: transform 0.1s ease, background 0.1s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+.calc-btn:active {
+  transform: scale(0.93);
+}
+.calc-btn.num {
+  background: #FFFFFF;
+  color: var(--app-dark);
+}
+.calc-btn.op {
+  background: #F3F4F6;
+  color: #374151;
+}
+.calc-btn.equal {
+  background: var(--app-lime);
+  color: var(--app-dark);
+  border-color: var(--app-lime);
+  font-size: 22px;
+}
+
+
