@@ -2,11 +2,16 @@ package com.edufocus.app;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.ActivityManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -25,13 +30,31 @@ public class MainActivity extends Activity {
     private WebView webView;
     private PermissionRequest pendingPermissionRequest;
 
+    // Kiosk anti-exit state
+    private boolean isKioskActive = false;
+    private boolean isExternalToolActive = false;
+    private Handler mainHandler;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
+        mainHandler = new Handler(Looper.getMainLooper());
 
         // Keep screen awake during class
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+        // Turn screen on and show over lock screen
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+            setShowWhenLocked(true);
+            setTurnScreenOn(true);
+        } else {
+            getWindow().addFlags(
+                WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD
+                | WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
+                | WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
+            );
+        }
 
         // Fullscreen immersive mode
         hideSystemUI();
@@ -48,7 +71,13 @@ public class MainActivity extends Activity {
         settings.setLoadWithOverviewMode(true);
         settings.setAllowFileAccess(true);
 
-        webView.setWebViewClient(new WebViewClient());
+        webView.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                hideSystemUI();
+            }
+        });
 
         // Handle camera permissions for in-app QR scanning
         webView.setWebChromeClient(new WebChromeClient() {
@@ -65,7 +94,7 @@ public class MainActivity extends Activity {
             }
         });
 
-        // Register AndroidBridge JavaScript Interface for Remote App Control
+        // Register AndroidBridge JavaScript Interface
         webView.addJavascriptInterface(new WebAppInterface(), "AndroidBridge");
 
         // Request camera permission on launch if not granted
@@ -94,7 +123,71 @@ public class MainActivity extends Activity {
         super.onWindowFocusChanged(hasFocus);
         if (hasFocus) {
             hideSystemUI();
+            isExternalToolActive = false;
+        } else if (isKioskActive && !isExternalToolActive) {
+            // If lost focus while class is active, immediately bring app back!
+            mainHandler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    if (isKioskActive && !isExternalToolActive) {
+                        bringAppToFront();
+                    }
+                }
+            }, 200);
         }
+    }
+
+    @Override
+    protected void onUserLeaveHint() {
+        super.onUserLeaveHint();
+        // Triggered when Home button or Recent Apps is pressed
+        if (isKioskActive && !isExternalToolActive) {
+            Toast.makeText(this, "⚠️ Dars vaqtida ilovadan chiqish taqiqlangan!", Toast.LENGTH_SHORT).show();
+            bringAppToFront();
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (isKioskActive && !isExternalToolActive) {
+            bringAppToFront();
+        }
+    }
+
+    private void bringAppToFront() {
+        try {
+            Intent intent = new Intent(this, MainActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+
+            ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+            if (am != null) {
+                am.moveTaskToFront(getTaskId(), ActivityManager.MOVE_TASK_WITH_HOME);
+            }
+        } catch (Exception e) {}
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (isKioskActive) {
+            Toast.makeText(this, "⚠️ Dars paytida ilovadan chiqish taqiqlangan!", Toast.LENGTH_SHORT).show();
+            return; // Block Back button completely during class!
+        }
+        if (webView != null && webView.canGoBack()) {
+            webView.goBack();
+        }
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (isKioskActive) {
+            if (keyCode == KeyEvent.KEYCODE_BACK) {
+                Toast.makeText(this, "⚠️ Dars paytida ilovadan chiqish taqiqlangan!", Toast.LENGTH_SHORT).show();
+                return true;
+            }
+        }
+        return super.onKeyDown(keyCode, event);
     }
 
     @Override
@@ -112,16 +205,9 @@ public class MainActivity extends Activity {
         }
     }
 
-    @Override
-    public void onBackPressed() {
-        if (webView != null && webView.canGoBack()) {
-            webView.goBack();
-        }
-    }
-
     /**
      * JavaScript Interface: AndroidBridge
-     * Enables teacher to remotely control/launch permitted apps (Calculator, Chrome, etc.)
+     * Controls native screen pinning (Kiosk Mode) and launching permitted tools
      */
     public class WebAppInterface {
 
@@ -131,12 +217,45 @@ public class MainActivity extends Activity {
         }
 
         @JavascriptInterface
+        public void startKioskMode() {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    isKioskActive = true;
+                    try {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                            startLockTask();
+                        }
+                    } catch (Exception e) {}
+                    hideSystemUI();
+                    Toast.makeText(MainActivity.this, "🔒 Dars rejimi: Ilovadan chiqish bloklandi", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void stopKioskMode() {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    isKioskActive = false;
+                    try {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                            stopLockTask();
+                        }
+                    } catch (Exception e) {}
+                    Toast.makeText(MainActivity.this, "🔓 Dars tugadi: Qulflash ochildi", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+
+        @JavascriptInterface
         public void openCalculator() {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
+                    isExternalToolActive = true;
                     boolean opened = false;
-                    // Try generic calculator intent
                     try {
                         Intent intent = new Intent();
                         intent.setAction(Intent.ACTION_MAIN);
@@ -146,7 +265,6 @@ public class MainActivity extends Activity {
                         opened = true;
                     } catch (Exception e) {}
 
-                    // Try standard OEM calculator packages
                     if (!opened) {
                         String[] calcPackages = {
                             "com.google.android.calculator",
@@ -180,6 +298,7 @@ public class MainActivity extends Activity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
+                    isExternalToolActive = true;
                     try {
                         String targetUrl = (url != null && !url.isEmpty()) ? url : "https://uz.wikipedia.org";
                         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(targetUrl));
@@ -197,6 +316,7 @@ public class MainActivity extends Activity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
+                    isExternalToolActive = true;
                     try {
                         Intent intent = getPackageManager().getLaunchIntentForPackage(packageName);
                         if (intent != null) {

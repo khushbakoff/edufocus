@@ -905,6 +905,9 @@
         showScreen('lock');
         startLockTimer(data.duration);
         requestFullscreen();
+        if (window.AndroidBridge && window.AndroidBridge.startKioskMode) {
+          window.AndroidBridge.startKioskMode();
+        }
       } else {
         showScreen('unlocked');
       }
@@ -968,6 +971,9 @@
       isLocked = false;
       showScreen('unlocked');
       exitFullscreen();
+      if (window.AndroidBridge && window.AndroidBridge.stopKioskMode) {
+        window.AndroidBridge.stopKioskMode();
+      }
 
       if (navigator.vibrate) {
         navigator.vibrate([200, 100, 200]);
@@ -978,10 +984,17 @@
       isLocked = true;
       showScreen('lock');
       requestFullscreen();
+      if (window.AndroidBridge && window.AndroidBridge.startKioskMode) {
+        window.AndroidBridge.startKioskMode();
+      }
     });
 
     socket.on('session-ended', (data) => {
       isLocked = false;
+
+      if (window.AndroidBridge && window.AndroidBridge.stopKioskMode) {
+        window.AndroidBridge.stopKioskMode();
+      }
 
       if (joinTime) {
         const elapsed = Math.floor((Date.now() - joinTime) / 1000 / 60);
@@ -995,6 +1008,15 @@
 
       if (navigator.vibrate) {
         navigator.vibrate([200, 100, 200, 100, 200]);
+      }
+    });
+
+    // Prevent accidental browser closure / back gesture during class
+    window.addEventListener('beforeunload', (e) => {
+      if (isLocked) {
+        e.preventDefault();
+        e.returnValue = 'Dars davom etmoqda! Ilovadan chiqish taqiqlangan.';
+        return e.returnValue;
       }
     });
 
