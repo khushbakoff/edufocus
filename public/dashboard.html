@@ -167,6 +167,9 @@
                     <button class="btn btn-success" id="unlock-btn" onclick="toggleLock()">
                       🔓 Ruxsat Berish
                     </button>
+                    <button class="btn btn-primary" onclick="openQuizModal()">
+                      📝 Test / Vazifa Yuborish
+                    </button>
                     <button class="btn btn-outline" onclick="regenerateQR()">
                       🔄 QR Yangilash
                     </button>
@@ -179,6 +182,30 @@
 
               <!-- Right: Students & Stats -->
               <div>
+                <!-- Live Quiz Tracker (Shown when quiz is sent) -->
+                <div class="card" id="quiz-tracker-card" style="display: none; margin-bottom: 16px; border: 1px solid rgba(59, 130, 246, 0.4)">
+                  <div class="card-header">
+                    <div>
+                      <h3 class="card-title" id="tracker-quiz-title" style="margin: 0">📝 Jonli Test Natijalari</h3>
+                      <p style="font-size: 12px; color: var(--text-muted); margin: 4px 0 0" id="tracker-quiz-subtitle">O'quvchilar javoblari kutilmoqda...</p>
+                    </div>
+                    <span class="badge badge-blue" id="tracker-quiz-count">0/0 topshirdi</span>
+                  </div>
+                  <div style="overflow-x: auto; max-height: 200px; margin-top: 10px">
+                    <table class="students-table" style="font-size: 13px">
+                      <thead>
+                        <tr>
+                          <th>O'quvchi</th>
+                          <th>To'g'ri / Jami</th>
+                          <th>Natija</th>
+                          <th>Vaqt</th>
+                        </tr>
+                      </thead>
+                      <tbody id="quiz-submissions-tbody"></tbody>
+                    </table>
+                  </div>
+                </div>
+
                 <!-- Progress -->
                 <div class="card" style="margin-bottom: 16px">
                   <div class="card-header">
@@ -292,6 +319,183 @@
           <span>🚀</span> Sessiyani Boshlash
         </button>
       </form>
+    </div>
+  </div>
+
+  <!-- Quiz & Material Modal -->
+  <div class="modal-overlay" id="quiz-modal">
+    <div class="modal" style="max-width: 680px; max-height: 90vh; overflow-y: auto">
+      <div class="modal-header">
+        <h2 class="modal-title">📝 O'quvchilarga Test / Vazifa Yuborish</h2>
+        <button class="modal-close" onclick="closeQuizModal()">✕</button>
+      </div>
+
+      <!-- Tab switcher -->
+      <div style="display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid var(--border-light); padding-bottom: 12px">
+        <button type="button" class="btn btn-primary btn-sm" id="tab-btn-quiz" onclick="switchSendTab('quiz')">
+          📝 Tezkor Test (Quiz)
+        </button>
+        <button type="button" class="btn btn-outline btn-sm" id="tab-btn-material" onclick="switchSendTab('material')">
+          📚 Dars Materiali / Havola
+        </button>
+      </div>
+
+      <!-- Tab 1: Quiz -->
+      <div id="tab-content-quiz">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px">
+          <label class="form-label" style="margin: 0">Test Sarlavhasi</label>
+          <button type="button" class="btn btn-outline btn-sm" onclick="loadSampleQuiz()">
+            ✨ Namunaviy Test Yuklash
+          </button>
+        </div>
+        <div class="form-group">
+          <input type="text" id="quiz-title-input" class="form-input" placeholder="Masalan: 1-mavzu bo'yicha tezkor savollar" value="Mavzu bo'yicha tezkor test">
+        </div>
+
+        <div id="quiz-questions-list">
+          <!-- Question blocks inserted dynamically -->
+        </div>
+
+        <button type="button" class="btn btn-outline" onclick="addQuestionBlock()" style="width: 100%; margin-bottom: 20px; border-style: dashed">
+          ➕ Yangi Savol Qo'shish
+        </button>
+
+        <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 20px">
+          <label class="form-label" style="margin: 0; white-space: nowrap">⏱️ Vaqt chegarasi (daqiqa):</label>
+          <input type="number" id="quiz-timelimit-input" class="form-input" value="3" min="0" max="60" style="width: 90px">
+          <span style="font-size: 12px; color: var(--text-muted)">(0 = cheklovsiz)</span>
+        </div>
+
+        <button type="button" class="btn btn-success btn-lg" onclick="broadcastQuiz()" style="width: 100%">
+          🚀 Testni Barcha O'quvchilarga Yuborish
+        </button>
+      </div>
+
+      <!-- Tab 2: Material -->
+      <div id="tab-content-material" style="display: none">
+        <div class="form-group">
+          <label class="form-label">Material / Vazifa Sarlavhasi</label>
+          <input type="text" id="material-title-input" class="form-input" placeholder="Masalan: Darslikning 45-betidagi 2-mashq">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Ko'rsatma / Vazifa Matni</label>
+          <textarea id="material-text-input" class="form-input" rows="4" placeholder="O'quvchilar nima qilishi kerakligini yozing..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Havola (URL) — Ixtiyoriy</label>
+          <input type="url" id="material-url-input" class="form-input" placeholder="https://darslik.uz/kitob.pdf yoki youtube.com/...">
+        </div>
+
+        <button type="button" class="btn btn-primary btn-lg" onclick="broadcastMaterial()" style="width: 100%">
+          📤 Materialni O'quvchilarga Yuborish
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Session Statistics & Summary Modal -->
+  <div class="modal-overlay" id="stats-modal">
+    <div class="modal modal-stats">
+      <div class="stats-summary-header">
+        <div>
+          <h2 class="stats-session-title">
+            <span>📊</span> <span id="summary-title">Dars Statistikasi</span>
+          </h2>
+          <div class="stats-session-meta">
+            <span>📚 Fan: <strong id="summary-subject">—</strong></span>
+            <span>📅 Sana: <span id="summary-date">—</span></span>
+            <span>⏱️ Vaqt: <span id="summary-time">—</span></span>
+          </div>
+        </div>
+        <button class="modal-close" onclick="closeStatsModal()">✕</button>
+      </div>
+
+      <!-- 4 KPI Cards -->
+      <div class="stats-kpi-grid">
+        <div class="stats-kpi-card">
+          <div class="stats-kpi-top">
+            <span class="stats-kpi-label">Jami O'quvchilar</span>
+            <span class="stats-kpi-icon">👥</span>
+          </div>
+          <div class="stats-kpi-value" id="summary-total-students">0</div>
+          <div class="stats-kpi-sub">Qatnashganlar</div>
+        </div>
+
+        <div class="stats-kpi-card">
+          <div class="stats-kpi-top">
+            <span class="stats-kpi-label">Dars Vaqti</span>
+            <span class="stats-kpi-icon">⏱️</span>
+          </div>
+          <div class="stats-kpi-value" id="summary-duration">0 daq</div>
+          <div class="stats-kpi-sub" id="summary-planned-duration">Reja: 45 daqiqa</div>
+        </div>
+
+        <div class="stats-kpi-card">
+          <div class="stats-kpi-top">
+            <span class="stats-kpi-label">O'rtacha Diqqat</span>
+            <span class="stats-kpi-icon">🎯</span>
+          </div>
+          <div class="stats-kpi-value" id="summary-focus-score" style="color: var(--green-400)">100%</div>
+          <div class="stats-kpi-sub">Intizom ko'rsatkichi</div>
+        </div>
+
+        <div class="stats-kpi-card">
+          <div class="stats-kpi-top">
+            <span class="stats-kpi-label">Qoidabuzarliklar</span>
+            <span class="stats-kpi-icon">⚠️</span>
+          </div>
+          <div class="stats-kpi-value" id="summary-violations" style="color: var(--yellow-400)">0</div>
+          <div class="stats-kpi-sub">Ekrandan chiqishlar</div>
+        </div>
+      </div>
+
+      <!-- Top Students (Perfect Focus) -->
+      <div class="stats-top-students" id="summary-top-section" style="display:none">
+        <div class="stats-top-title">
+          <span>🏆</span> 100% Diqqatli O'quvchilar (Sahifadan umuman chiqmaganlar)
+        </div>
+        <div class="top-students-chips" id="summary-top-chips"></div>
+      </div>
+
+      <!-- Students Detailed Table -->
+      <div style="margin-top: 16px">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px">
+          <h4 style="font-size: 16px; font-weight: 700; margin: 0">📋 O'quvchilar Hisoboti</h4>
+          <span style="font-size: 12px; color: var(--text-muted)" id="summary-table-count">0 ta o'quvchi</span>
+        </div>
+        <div style="overflow-x: auto; max-height: 280px">
+          <table class="students-table">
+            <thead>
+              <tr>
+                <th>O'quvchi</th>
+                <th>Qurilma</th>
+                <th>Kirgan Vaqti</th>
+                <th>Ekrandan Chiqish</th>
+                <th>Diqqat Ko'rsatkichi</th>
+                <th>Baho</th>
+              </tr>
+            </thead>
+            <tbody id="summary-students-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Modal Actions -->
+      <div class="stats-actions-bar">
+        <div style="display: flex; gap: 10px; flex-wrap: wrap">
+          <button class="btn btn-outline" onclick="printStatsReport()">
+            🖨️ Chop Etish / PDF
+          </button>
+          <button class="btn btn-outline" onclick="exportStatsToCSV()">
+            📥 Excel (CSV) Yuklab Olish
+          </button>
+        </div>
+        <button class="btn btn-primary" onclick="closeStatsModal()">
+          Yopish
+        </button>
+      </div>
     </div>
   </div>
 
@@ -559,6 +763,196 @@
       }
     }
 
+    // ============================================
+    // QUIZ & MATERIAL BROADCASTING
+    // ============================================
+    let questionCounter = 0;
+
+    function openQuizModal() {
+      if (!currentSession) {
+        showToast('Avval faol sessiya mavjud bo\'lishi kerak', 'warning', '⚠️');
+        return;
+      }
+      const list = document.getElementById('quiz-questions-list');
+      if (list.children.length === 0) {
+        loadSampleQuiz();
+      }
+      document.getElementById('quiz-modal').classList.add('active');
+    }
+
+    function closeQuizModal() {
+      document.getElementById('quiz-modal').classList.remove('active');
+    }
+
+    function switchSendTab(tab) {
+      const isQuiz = tab === 'quiz';
+      document.getElementById('tab-content-quiz').style.display = isQuiz ? 'block' : 'none';
+      document.getElementById('tab-content-material').style.display = isQuiz ? 'none' : 'block';
+
+      document.getElementById('tab-btn-quiz').className = isQuiz ? 'btn btn-primary btn-sm' : 'btn btn-outline btn-sm';
+      document.getElementById('tab-btn-material').className = isQuiz ? 'btn btn-outline btn-sm' : 'btn btn-primary btn-sm';
+    }
+
+    function addQuestionBlock(text = '', options = ['', '', '', ''], correctIdx = 0) {
+      questionCounter++;
+      const qId = questionCounter;
+      const list = document.getElementById('quiz-questions-list');
+
+      const card = document.createElement('div');
+      card.className = 'quiz-question-card';
+      card.id = `q-card-${qId}`;
+
+      const optionLetters = ['A', 'B', 'C', 'D'];
+      const optionsHtml = optionLetters.map((letter, idx) => `
+        <div class="quiz-option-input-row">
+          <input type="radio" name="q-correct-${qId}" value="${idx}" class="quiz-correct-radio" ${idx === correctIdx ? 'checked' : ''} title="To'g'ri javob deb belgilash">
+          <span style="font-weight: 700; width: 20px">${letter})</span>
+          <input type="text" class="form-input q-option-val" data-idx="${idx}" placeholder="${letter} varianti" value="${options[idx] || ''}" required>
+        </div>
+      `).join('');
+
+      card.innerHTML = `
+        <div class="quiz-question-header">
+          <span class="quiz-question-num">Savol #${list.children.length + 1}</span>
+          <button type="button" class="btn btn-outline btn-sm" style="color: var(--red-400); padding: 2px 8px" onclick="removeQuestionBlock(${qId})">✕ O'chirish</button>
+        </div>
+        <input type="text" class="form-input q-text-input" placeholder="Savol matnini kiriting..." value="${text}" required style="margin-bottom: 8px">
+        <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px">To'g'ri javobni tanlash uchun chapdagi dumaloqchani belgilang:</div>
+        <div class="quiz-options-grid">
+          ${optionsHtml}
+        </div>
+      `;
+
+      list.appendChild(card);
+    }
+
+    function removeQuestionBlock(qId) {
+      const card = document.getElementById(`q-card-${qId}`);
+      if (card) {
+        card.remove();
+        const list = document.getElementById('quiz-questions-list');
+        Array.from(list.children).forEach((c, index) => {
+          const numSpan = c.querySelector('.quiz-question-num');
+          if (numSpan) numSpan.textContent = `Savol #${index + 1}`;
+        });
+      }
+    }
+
+    function loadSampleQuiz() {
+      const list = document.getElementById('quiz-questions-list');
+      list.innerHTML = '';
+      questionCounter = 0;
+
+      addQuestionBlock('1. Kompyuterning miyasi hisoblangan asosiy qurilma nima?', [
+        'Protsessor (CPU)',
+        'Qattiq disk (HDD)',
+        'Monitor',
+        'Klaviatura'
+      ], 0);
+
+      addQuestionBlock('2. Dasturlashda o\'zgaruvchi nima uchun ishlatiladi?', [
+        'Faqat rang berish uchun',
+        'Ma\'lumotlarni saqlash va ular ustida amallar bajarish uchun',
+        'Kompyuterni o\'chirish uchun',
+        'Internet tezligini oshirish uchun'
+      ], 1);
+
+      addQuestionBlock('3. Qaysi biri veb-sahifaning asosiy tuzilmasini yaratadi?', [
+        'CSS',
+        'Python',
+        'HTML',
+        'SQL'
+      ], 2);
+
+      document.getElementById('quiz-title-input').value = 'Informatika — Tezkor test';
+    }
+
+    function broadcastQuiz() {
+      if (!currentSession) return;
+
+      const title = document.getElementById('quiz-title-input').value.trim() || 'Tezkor Test';
+      const timeLimit = parseInt(document.getElementById('quiz-timelimit-input').value) || 0;
+      const list = document.getElementById('quiz-questions-list');
+      const cards = list.querySelectorAll('.quiz-question-card');
+
+      if (cards.length === 0) {
+        showToast('Kamida bitta savol qo\'shing!', 'warning', '⚠️');
+        return;
+      }
+
+      const questions = [];
+      for (let i = 0; i < cards.length; i++) {
+        const card = cards[i];
+        const text = card.querySelector('.q-text-input').value.trim();
+        if (!text) {
+          showToast(`Savol #${i + 1} matni bo'sh!`, 'warning', '⚠️');
+          return;
+        }
+
+        const optionInputs = card.querySelectorAll('.q-option-val');
+        const options = Array.from(optionInputs).map(inp => inp.value.trim());
+        if (options.some(opt => !opt)) {
+          showToast(`Savol #${i + 1} barcha variantlarini to'ldiring!`, 'warning', '⚠️');
+          return;
+        }
+
+        const checkedRadio = card.querySelector('input[type="radio"]:checked');
+        const correctIndex = checkedRadio ? parseInt(checkedRadio.value) : 0;
+
+        questions.push({
+          id: `q_${i + 1}`,
+          text,
+          options,
+          correctIndex
+        });
+      }
+
+      socket.emit('teacher-send-quiz', {
+        sessionId: currentSession.id,
+        quiz: {
+          title,
+          questions,
+          timeLimit
+        }
+      });
+
+      closeQuizModal();
+      showToast('Test barcha o\'quvchilarga yuborildi! 🚀', 'success', '📝');
+      addActivity('📝', `Test yuborildi: "${title}" (${questions.length} ta savol)`);
+
+      // Show live tracker
+      document.getElementById('quiz-tracker-card').style.display = 'block';
+      document.getElementById('tracker-quiz-title').textContent = `📝 ${title}`;
+      document.getElementById('tracker-quiz-subtitle').textContent = `${questions.length} ta savol · O'quvchilar javob bermoqda...`;
+      document.getElementById('tracker-quiz-count').textContent = '0 topshirdi';
+      document.getElementById('quiz-submissions-tbody').innerHTML = '<tr><td colspan="4" style="text-align:center; color: var(--text-muted); padding: 16px">Javoblar kutilmoqda...</td></tr>';
+    }
+
+    function broadcastMaterial() {
+      if (!currentSession) return;
+
+      const title = document.getElementById('material-title-input').value.trim() || 'Dars Materiali';
+      const text = document.getElementById('material-text-input').value.trim();
+      const url = document.getElementById('material-url-input').value.trim();
+
+      if (!text && !url) {
+        showToast('Vazifa matni yoki havola kiriting!', 'warning', '⚠️');
+        return;
+      }
+
+      socket.emit('teacher-send-material', {
+        sessionId: currentSession.id,
+        material: { title, text, url }
+      });
+
+      closeQuizModal();
+      showToast('Material o\'quvchilarga yuborildi! 📤', 'success', '📚');
+      addActivity('📚', `Material yuborildi: "${title}"`);
+    }
+
+    let currentModalStats = null;
+    let cachedRecentSessions = [];
+
     async function endSession() {
       if (!currentSession) return;
       if (!confirm('Sessiyani tugatmoqchimisiz?')) return;
@@ -576,19 +970,183 @@
           document.getElementById('active-session').style.display = 'none';
           document.getElementById('no-session').style.display = 'block';
 
-          showToast('Sessiya tugatildi', 'success', '✅');
+          showToast('Sessiya tugatildi va hisobot tayyorlandi!', 'success', '✅');
 
-          // Reset
+          // Reset active session state
           document.getElementById('students-tbody').innerHTML = '';
           document.getElementById('no-students').style.display = 'block';
           document.getElementById('activity-log').innerHTML = '';
           currentSession = null;
 
           loadStats();
+
+          // Open detailed statistics modal
+          if (data.statistics) {
+            openStatsModal(data.statistics);
+          }
         }
       } catch (err) {
         showToast('Xatolik yuz berdi', 'error', '❌');
       }
+    }
+
+    // ============================================
+    // SESSION STATISTICS MODAL & REPORTING
+    // ============================================
+    function openStatsModal(stats) {
+      if (!stats) return;
+      currentModalStats = stats;
+
+      document.getElementById('summary-title').textContent = stats.sessionName || 'Dars Statistikasi';
+      document.getElementById('summary-subject').textContent = stats.subject || 'Umumiy';
+
+      const created = new Date(stats.createdAt);
+      document.getElementById('summary-date').textContent = created.toLocaleDateString('uz', {
+        day: '2-digit', month: '2-digit', year: 'numeric'
+      });
+
+      const startTimeStr = created.toLocaleTimeString('uz', { hour: '2-digit', minute: '2-digit' });
+      const endTimeStr = stats.endedAt ? new Date(stats.endedAt).toLocaleTimeString('uz', { hour: '2-digit', minute: '2-digit' }) : '—';
+      document.getElementById('summary-time').textContent = `${startTimeStr} — ${endTimeStr}`;
+
+      // KPIs
+      document.getElementById('summary-total-students').textContent = stats.totalStudents || 0;
+      document.getElementById('summary-duration').textContent = `${stats.actualDuration || stats.plannedDuration || 0} daq`;
+      document.getElementById('summary-planned-duration').textContent = `Reja: ${stats.plannedDuration || 45} daqiqa`;
+
+      const scoreEl = document.getElementById('summary-focus-score');
+      const score = stats.averageFocusScore !== undefined ? stats.averageFocusScore : 100;
+      scoreEl.textContent = `${score}%`;
+      if (score >= 90) scoreEl.style.color = 'var(--green-400)';
+      else if (score >= 70) scoreEl.style.color = 'var(--yellow-400)';
+      else scoreEl.style.color = 'var(--red-400)';
+
+      document.getElementById('summary-violations').textContent = `${stats.totalViolations || 0} ta`;
+
+      // Top students (0 violations)
+      const topSection = document.getElementById('summary-top-section');
+      const topChips = document.getElementById('summary-top-chips');
+      const perfectStudents = (stats.students || []).filter(s => (s.violationsCount || 0) === 0);
+
+      if (perfectStudents.length > 0) {
+        topSection.style.display = 'block';
+        topChips.innerHTML = perfectStudents.map(st => {
+          const initials = st.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+          return `
+            <div class="student-chip">
+              <span class="student-chip-avatar">${initials}</span>
+              <span>${st.name}</span>
+              <span style="font-size: 11px; color: var(--green-400); margin-left: 4px">100%</span>
+            </div>
+          `;
+        }).join('');
+      } else {
+        topSection.style.display = 'none';
+        topChips.innerHTML = '';
+      }
+
+      // Students table
+      const tbody = document.getElementById('summary-students-tbody');
+      document.getElementById('summary-table-count').textContent = `${stats.students ? stats.students.length : 0} ta o'quvchi`;
+
+      if (!stats.students || stats.students.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 24px">O'quvchilar qo'shilmagan</td></tr>`;
+      } else {
+        tbody.innerHTML = stats.students.map(st => {
+          const initials = st.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+          const time = new Date(st.joinedAt).toLocaleTimeString('uz', { hour: '2-digit', minute: '2-digit' });
+          const violations = st.violationsCount || 0;
+          const violationsText = violations === 0
+            ? '<span style="color: var(--green-400); font-weight: 600">0 marta ✅</span>'
+            : `<span style="color: var(--yellow-400); font-weight: 600">${violations} marta ⚠️</span>`;
+
+          const studentScore = st.focusScore !== undefined ? st.focusScore : Math.max(0, 100 - (violations * 15));
+          const barClass = studentScore >= 90 ? 'bar-green' : (studentScore >= 70 ? 'bar-yellow' : 'bar-red');
+          const badgeClass = st.badgeClass || (studentScore >= 90 ? 'badge-green' : (studentScore >= 70 ? 'badge-yellow' : 'badge-red'));
+          const rating = st.rating || (studentScore >= 90 ? "A'lo" : (studentScore >= 70 ? 'Yaxshi' : 'Diqqatsiz'));
+
+          return `
+            <tr>
+              <td>
+                <div class="student-name-cell">
+                  <div class="student-avatar">${initials}</div>
+                  <strong style="color: var(--text-primary)">${st.name}</strong>
+                </div>
+              </td>
+              <td style="color: var(--text-secondary); font-size: 13px">${st.device || 'Noma\'lum'}</td>
+              <td style="color: var(--text-secondary); font-size: 13px">${time}</td>
+              <td style="font-size: 13px">${violationsText}</td>
+              <td>
+                <div class="focus-score-cell">
+                  <div class="focus-score-bar-bg">
+                    <div class="focus-score-bar-fill ${barClass}" style="width: ${studentScore}%"></div>
+                  </div>
+                  <span class="focus-score-num">${studentScore}%</span>
+                </div>
+              </td>
+              <td><span class="badge ${badgeClass}">${rating}</span></td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      document.getElementById('stats-modal').classList.add('active');
+    }
+
+    function closeStatsModal() {
+      document.getElementById('stats-modal').classList.remove('active');
+    }
+
+    async function viewSessionStats(sessionId) {
+      const cached = cachedRecentSessions.find(s => s.id === sessionId);
+      if (cached && cached.statistics) {
+        openStatsModal(cached.statistics);
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/sessions/${sessionId}/stats`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.success && data.statistics) {
+          openStatsModal(data.statistics);
+        } else {
+          showToast('Statistika topilmadi', 'error', '❌');
+        }
+      } catch (err) {
+        showToast('Statistika yuklanmadi', 'error', '❌');
+      }
+    }
+
+    function printStatsReport() {
+      window.print();
+    }
+
+    function exportStatsToCSV() {
+      if (!currentModalStats) return;
+
+      const stats = currentModalStats;
+      let csv = 'Ism,Qurilma,Qoshilgan Vaqt,Qoidabuzarliklar (Chiqishlar),Diqqat Bali (%),Baho\n';
+
+      (stats.students || []).forEach(st => {
+        const time = new Date(st.joinedAt).toLocaleTimeString('uz', { hour: '2-digit', minute: '2-digit' });
+        const name = `"${st.name.replace(/"/g, '""')}"`;
+        const device = `"${(st.device || '').replace(/"/g, '""')}"`;
+        const score = st.focusScore !== undefined ? st.focusScore : Math.max(0, 100 - ((st.violationsCount || 0) * 15));
+        const rating = st.rating || (score >= 90 ? "A'lo" : (score >= 70 ? 'Yaxshi' : 'Diqqatsiz'));
+
+        csv += `${name},${device},${time},${st.violationsCount || 0},${score}%,${rating}\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `EduFocus_Hisobot_${(stats.sessionName || 'Dars').replace(/\s+/g, '_')}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
 
     // ============================================
@@ -693,15 +1251,32 @@
       addActivity('✅', data.message);
     });
 
-    socket.on('student-disconnected', (data) => {
-      const statusEl = document.getElementById(`student-status-${data.student.id}`);
-      if (statusEl) {
-        statusEl.className = 'badge badge-yellow';
-        statusEl.textContent = '🔴 Uzildi';
+    socket.on('quiz-submission-update', (data) => {
+      const { submission, totalSubmissions, totalStudents, submissions } = data;
+      const countEl = document.getElementById('tracker-quiz-count');
+      if (countEl) {
+        countEl.textContent = `${totalSubmissions}/${totalStudents || totalSubmissions} topshirdi`;
+        countEl.className = 'badge badge-green';
       }
-      addActivity('🔴', data.message);
-      showToast(data.message, 'error', '🔴');
-      updateStudentCount();
+
+      showToast(`📝 ${submission.studentName} test topshirdi: ${submission.correctCount}/${submission.totalQuestions} (${submission.percentage}%)`, 'info', '📝');
+      addActivity('📝', `${submission.studentName} test topshirdi: ${submission.correctCount}/${submission.totalQuestions} (${submission.percentage}%)`);
+
+      const tbody = document.getElementById('quiz-submissions-tbody');
+      if (tbody && submissions && submissions.length > 0) {
+        tbody.innerHTML = submissions.map(sub => {
+          const time = new Date(sub.submittedAt).toLocaleTimeString('uz', { hour: '2-digit', minute: '2-digit' });
+          const badgeClass = sub.percentage >= 80 ? 'badge-green' : (sub.percentage >= 50 ? 'badge-yellow' : 'badge-red');
+          return `
+            <tr>
+              <td><strong style="color: var(--text-primary)">${sub.studentName}</strong></td>
+              <td>${sub.correctCount} / ${sub.totalQuestions} ta to'g'ri</td>
+              <td><span class="badge ${badgeClass}">${sub.percentage}%</span></td>
+              <td style="color: var(--text-secondary)">${time}</td>
+            </tr>
+          `;
+        }).join('');
+      }
     });
 
     // ============================================
@@ -721,6 +1296,7 @@
 
         // Recent sessions
         if (data.recentSessions && data.recentSessions.length > 0) {
+          cachedRecentSessions = data.recentSessions;
           const container = document.getElementById('recent-sessions');
           container.innerHTML = '<div class="history-list">' +
             data.recentSessions.map(s => {
@@ -732,19 +1308,28 @@
               });
               const statusClass = s.status === 'active' ? 'badge-green' : 'badge-blue';
               const statusText = s.status === 'active' ? 'Faol' : 'Tugagan';
+              const focusScore = s.statistics ? s.statistics.averageFocusScore : null;
 
               return `
-                <div class="history-item">
+                <div class="history-item" onclick="viewSessionStats('${s.id}')" style="cursor: pointer" title="Statistikani ko'rish uchun bosing">
                   <div class="history-info">
                     <div class="history-icon">📚</div>
                     <div>
                       <div class="history-name">${s.name}</div>
-                      <div class="history-meta">${s.subject || s.name}</div>
+                      <div class="history-meta">
+                        ${s.subject || s.name} · <span class="badge ${statusClass}">${statusText}</span>
+                        ${focusScore !== null ? `· <span style="color: var(--green-400); font-weight: 600">🎯 ${focusScore}% diqqat</span>` : ''}
+                      </div>
                     </div>
                   </div>
-                  <div class="history-stats">
-                    <div class="history-student-count">👥 ${s.students ? s.students.length : 0} o'quvchi</div>
-                    <div class="history-date">${date} ${time}</div>
+                  <div class="history-stats" style="display: flex; align-items: center; gap: 14px">
+                    <div style="text-align: right">
+                      <div class="history-student-count">👥 ${s.students ? s.students.length : 0} o'quvchi</div>
+                      <div class="history-date">${date} ${time}</div>
+                    </div>
+                    <button class="btn btn-outline" style="padding: 6px 12px; font-size: 13px" onclick="event.stopPropagation(); viewSessionStats('${s.id}')">
+                      📊 Hisobot
+                    </button>
                   </div>
                 </div>
               `;

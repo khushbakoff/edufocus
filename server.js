@@ -162,7 +162,10 @@ app.post('/api/sessions', authMiddleware, async (req, res) => {
       locked: true,           // true = students locked, false = students free
       createdAt: new Date().toISOString(),
       duration: duration || 45,
-      students: []            // { id, name, device, joinedAt, isActive, socketId }
+      students: [],           // { id, name, device, joinedAt, isActive, socketId }
+      activeQuiz: null,
+      quizSubmissions: [],
+      activeMaterial: null
     };
 
     db.sessions.push(session);
@@ -227,6 +230,86 @@ app.post('/api/sessions/:id/regenerate-qr', authMiddleware, async (req, res) => 
   res.json({ success: true, qrCode: qrDataUrl });
 });
 
+// Helper to calculate session statistics
+function calculateSessionStats(session) {
+  const startTime = new Date(session.createdAt).getTime();
+  const endTime = session.endedAt ? new Date(session.endedAt).getTime() : Date.now();
+  const actualDurationMinutes = Math.max(1, Math.round((endTime - startTime) / 60000));
+
+  const totalStudents = session.students ? session.students.length : 0;
+  const totalViolations = session.students
+    ? session.students.reduce((sum, st) => sum + (st.violationsCount || 0), 0)
+    : 0;
+
+  // Calculate focus score per student (100 base, -15 per violation, minimum 0)
+  const studentsWithScores = (session.students || []).map(st => {
+    const violations = st.violationsCount || 0;
+    const score = Math.max(0, 100 - (violations * 15));
+    let rating = "A'lo";
+    let badgeClass = 'badge-green';
+
+    if (violations === 0) {
+      rating = "A'lo";
+      badgeClass = 'badge-green';
+    } else if (violations <= 2) {
+      rating = 'Yaxshi';
+      badgeClass = 'badge-yellow';
+    } else {
+      rating = 'Diqqatsiz';
+      badgeClass = 'badge-red';
+    }
+
+    const quizSubmission = (session.quizSubmissions || []).find(q => q.studentId === st.id);
+
+    return {
+      id: st.id,
+      name: st.name,
+      device: st.device,
+      joinedAt: st.joinedAt,
+      violationsCount: violations,
+      focusScore: score,
+      rating,
+      badgeClass,
+      quizScore: quizSubmission ? `${quizSubmission.correctCount}/${quizSubmission.totalQuestions} (${quizSubmission.percentage}%)` : (st.quizScore || '—')
+    };
+  });
+
+  // Average focus score for the class
+  const avgFocus = totalStudents > 0
+    ? Math.round(studentsWithScores.reduce((sum, st) => sum + st.focusScore, 0) / totalStudents)
+    : 100;
+
+  const perfectStudents = studentsWithScores.filter(st => st.violationsCount === 0);
+  const flaggedStudents = studentsWithScores.filter(st => st.violationsCount > 0);
+
+  // Quiz summary if any
+  const quizSummary = session.activeQuiz ? {
+    title: session.activeQuiz.title,
+    totalQuestions: session.activeQuiz.questions.length,
+    submissionsCount: (session.quizSubmissions || []).length,
+    averageScore: (session.quizSubmissions && session.quizSubmissions.length > 0)
+      ? Math.round(session.quizSubmissions.reduce((sum, sub) => sum + sub.percentage, 0) / session.quizSubmissions.length)
+      : 0
+  } : null;
+
+  return {
+    sessionId: session.id,
+    sessionName: session.name,
+    subject: session.subject || 'Umumiy',
+    createdAt: session.createdAt,
+    endedAt: session.endedAt || new Date().toISOString(),
+    plannedDuration: session.duration || 45,
+    actualDuration: actualDurationMinutes,
+    totalStudents,
+    totalViolations,
+    averageFocusScore: avgFocus,
+    perfectStudentsCount: perfectStudents.length,
+    flaggedStudentsCount: flaggedStudents.length,
+    quizSummary,
+    students: studentsWithScores
+  };
+}
+
 // End session
 app.post('/api/sessions/:id/end', authMiddleware, (req, res) => {
   const session = db.sessions.find(s => s.id === req.params.id && s.teacherId === req.teacherId);
@@ -234,14 +317,33 @@ app.post('/api/sessions/:id/end', authMiddleware, (req, res) => {
 
   session.status = 'ended';
   session.locked = false;
+  session.endedAt = new Date().toISOString();
+
+  // Compute final statistics
+  session.statistics = calculateSessionStats(session);
 
   // Notify all students
   io.to(`session-${session.id}`).emit('session-ended', {
     message: 'Dars tugadi!',
-    duration: session.duration
+    duration: session.statistics.actualDuration
   });
 
-  res.json({ success: true });
+  res.json({
+    success: true,
+    statistics: session.statistics
+  });
+});
+
+// Get session stats
+app.get('/api/sessions/:id/stats', authMiddleware, (req, res) => {
+  const session = db.sessions.find(s => s.id === req.params.id && s.teacherId === req.teacherId);
+  if (!session) return res.status(404).json({ error: 'Sessiya topilmadi' });
+
+  if (!session.statistics) {
+    session.statistics = calculateSessionStats(session);
+  }
+
+  res.json({ success: true, statistics: session.statistics });
 });
 
 // Unlock students
@@ -280,11 +382,26 @@ app.get('/api/stats', authMiddleware, (req, res) => {
   const totalStudents = teacherSessions.reduce((acc, s) => acc + s.students.length, 0);
   const activeSessions = teacherSessions.filter(s => s.status === 'active').length;
 
+  const enrichedSessions = teacherSessions.slice(-20).reverse().map(s => {
+    return {
+      id: s.id,
+      name: s.name,
+      subject: s.subject,
+      status: s.status,
+      duration: s.duration,
+      createdAt: s.createdAt,
+      endedAt: s.endedAt,
+      studentCount: s.students ? s.students.length : 0,
+      students: s.students || [],
+      statistics: s.statistics || calculateSessionStats(s)
+    };
+  });
+
   res.json({
     totalSessions,
     totalStudents,
     activeSessions,
-    recentSessions: teacherSessions.slice(-10).reverse()
+    recentSessions: enrichedSessions
   });
 });
 
@@ -311,7 +428,9 @@ io.on('connection', (socket) => {
       device: device || 'Noma\'lum qurilma',
       joinedAt: new Date().toISOString(),
       isActive: true,
-      socketId: socket.id
+      socketId: socket.id,
+      violationsCount: 0,
+      violations: []
     };
 
     session.students.push(student);
@@ -325,14 +444,134 @@ io.on('connection', (socket) => {
       activeStudents: session.students.filter(s => s.isActive).length
     });
 
-    // Send session info to student
+    // Send session info to student (include active quiz or material if already sent)
     socket.emit('join-success', {
       studentId: student.id,
       sessionName: session.name,
       subject: session.subject,
       locked: session.locked,
-      duration: session.duration
+      duration: session.duration,
+      activeQuiz: session.activeQuiz ? {
+        quizId: session.activeQuiz.id,
+        title: session.activeQuiz.title,
+        questions: session.activeQuiz.questions.map(q => ({ id: q.id, text: q.text, options: q.options })),
+        timeLimit: session.activeQuiz.timeLimit
+      } : null,
+      activeMaterial: session.activeMaterial || null
     });
+  });
+
+  // Teacher sends a Quiz
+  socket.on('teacher-send-quiz', (data) => {
+    const { sessionId, quiz } = data;
+    const session = db.sessions.find(s => s.id === sessionId);
+    if (!session) return;
+
+    session.activeQuiz = {
+      id: uuidv4().substring(0, 8),
+      title: quiz.title || 'Tezkor Test',
+      questions: quiz.questions || [],
+      timeLimit: quiz.timeLimit || 0,
+      createdAt: new Date().toISOString()
+    };
+    session.quizSubmissions = [];
+
+    const sanitizedQuestions = session.activeQuiz.questions.map(q => ({
+      id: q.id,
+      text: q.text,
+      options: q.options
+    }));
+
+    io.to(`session-${sessionId}`).emit('new-quiz', {
+      quizId: session.activeQuiz.id,
+      title: session.activeQuiz.title,
+      questions: sanitizedQuestions,
+      timeLimit: session.activeQuiz.timeLimit
+    });
+
+    socket.emit('quiz-broadcast-success', {
+      quizId: session.activeQuiz.id,
+      title: session.activeQuiz.title,
+      questionsCount: session.activeQuiz.questions.length
+    });
+  });
+
+  // Student submits Quiz answers
+  socket.on('student-submit-quiz', (data) => {
+    const { sessionId, studentId, studentName, quizId, answers } = data;
+    const session = db.sessions.find(s => s.id === sessionId);
+    if (!session || !session.activeQuiz || session.activeQuiz.id !== quizId) return;
+
+    // Check if already submitted
+    const existing = session.quizSubmissions.find(sub => sub.studentId === studentId);
+    if (existing) return;
+
+    let correctCount = 0;
+    const questions = session.activeQuiz.questions;
+    const results = questions.map(q => {
+      const selected = answers[q.id];
+      const isCorrect = selected !== undefined && Number(selected) === Number(q.correctIndex);
+      if (isCorrect) correctCount++;
+      return {
+        questionId: q.id,
+        selected,
+        correctIndex: q.correctIndex,
+        isCorrect
+      };
+    });
+
+    const totalQuestions = questions.length;
+    const percentage = totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0;
+
+    const submission = {
+      studentId,
+      studentName,
+      correctCount,
+      totalQuestions,
+      percentage,
+      submittedAt: new Date().toISOString()
+    };
+
+    session.quizSubmissions.push(submission);
+
+    const student = session.students.find(s => s.id === studentId);
+    if (student) {
+      student.quizScore = `${correctCount}/${totalQuestions} (${percentage}%)`;
+      student.quizPercentage = percentage;
+    }
+
+    // Send result to the student
+    socket.emit('quiz-result', {
+      correctCount,
+      totalQuestions,
+      percentage,
+      results
+    });
+
+    // Send update to teacher
+    io.to(`teacher-${sessionId}`).emit('quiz-submission-update', {
+      submission,
+      totalSubmissions: session.quizSubmissions.length,
+      totalStudents: session.students.length,
+      submissions: session.quizSubmissions
+    });
+  });
+
+  // Teacher sends Material / Link
+  socket.on('teacher-send-material', (data) => {
+    const { sessionId, material } = data;
+    const session = db.sessions.find(s => s.id === sessionId);
+    if (!session) return;
+
+    session.activeMaterial = {
+      title: material.title || 'Dars Materiali',
+      text: material.text || '',
+      url: material.url || '',
+      sentAt: new Date().toISOString()
+    };
+
+    io.to(`session-${sessionId}`).emit('new-material', session.activeMaterial);
+    socket.emit('material-broadcast-success', session.activeMaterial);
   });
 
   // Teacher joins to monitor
@@ -350,9 +589,17 @@ io.on('connection', (socket) => {
       const student = session.students.find(s => s.id === studentId);
       if (student) {
         student.isActive = false;
+        student.violationsCount = (student.violationsCount || 0) + 1;
+        if (!student.violations) student.violations = [];
+        student.violations.push({
+          time: new Date().toISOString(),
+          type: 'left_page'
+        });
+
         io.to(`teacher-${sessionId}`).emit('student-violation', {
           student,
-          message: `⚠️ ${student.name} sahifadan chiqdi!`,
+          violationsCount: student.violationsCount,
+          message: `⚠️ ${student.name} sahifadan chiqdi! (${student.violationsCount}-marta)`,
           time: new Date().toISOString()
         });
       }

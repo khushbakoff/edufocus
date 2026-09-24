@@ -122,12 +122,76 @@
   </div>
 
   <!-- ======================== -->
+  <!-- ======================== -->
   <!-- SCREEN: ERROR -->
   <!-- ======================== -->
   <div id="screen-error" class="end-screen" style="display:none">
     <div class="end-icon">❌</div>
     <h1 class="end-title" style="color: var(--red-400)">Xatolik</h1>
     <p class="end-message" id="error-message">Sessiya topilmadi yoki tugagan</p>
+  </div>
+
+  <!-- ======================== -->
+  <!-- STUDENT QUIZ OVERLAY -->
+  <!-- ======================== -->
+  <div id="student-quiz-overlay" class="student-quiz-overlay" style="display: none">
+    <div class="student-quiz-container">
+      <div class="student-quiz-header">
+        <div>
+          <h2 style="font-size: 18px; font-weight: 800; margin: 0; color: var(--text-primary)" id="sq-title">📝 Tezkor Test</h2>
+          <span style="font-size: 12px; color: var(--text-muted)" id="sq-qcount">3 ta savol</span>
+        </div>
+        <div id="sq-timer-badge" class="student-quiz-timer" style="display: none">
+          <span>⏱️</span> <span id="sq-timer-val">03:00</span>
+        </div>
+      </div>
+
+      <!-- Questions List Form -->
+      <form id="student-quiz-form" onsubmit="submitStudentQuiz(event)">
+        <div id="sq-questions-body"></div>
+
+        <button type="submit" class="btn btn-primary btn-lg" style="width: 100%; margin-top: 14px" id="sq-submit-btn">
+          Javoblarni Topshirish 🚀
+        </button>
+      </form>
+
+      <!-- Quiz Results View (Shown after submitting) -->
+      <div id="sq-result-view" style="display: none; text-align: center; padding: 20px 0">
+        <div style="font-size: 48px; margin-bottom: 10px" id="sq-result-emoji">🎉</div>
+        <h3 style="font-size: 22px; font-weight: 800; margin-bottom: 6px" id="sq-result-title">Ajoyib natija!</h3>
+        <p style="color: var(--text-secondary); margin-bottom: 16px" id="sq-result-desc">Test muvaffaqiyatli topshirildi</p>
+        
+        <div style="background: var(--bg-tertiary); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 20px">
+          <div style="font-size: 32px; font-weight: 800; color: var(--green-400)" id="sq-result-score">3 / 3</div>
+          <div style="font-size: 13px; color: var(--text-muted)">To'g'ri javoblar soni</div>
+        </div>
+
+        <button type="button" class="btn btn-outline" style="width: 100%" onclick="closeStudentQuiz()">
+          Yopish
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Material Notification Modal -->
+  <div id="student-material-modal" class="modal-overlay">
+    <div class="modal" style="max-width: 440px">
+      <div class="modal-header">
+        <h3 class="modal-title" style="display: flex; align-items: center; gap: 8px">
+          <span>📚</span> <span id="sm-title">Dars Materiali</span>
+        </h3>
+        <button class="modal-close" onclick="closeStudentMaterial()">✕</button>
+      </div>
+      <div style="padding: 10px 0">
+        <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.6; margin-bottom: 16px; white-space: pre-wrap" id="sm-text"></p>
+        <a id="sm-link-btn" href="#" target="_blank" class="btn btn-primary" style="width: 100%; text-decoration: none; justify-content: center; display: none">
+          🔗 Havolani Ochish
+        </a>
+      </div>
+      <button type="button" class="btn btn-outline" style="width: 100%; margin-top: 10px" onclick="closeStudentMaterial()">
+        Tushundim
+      </button>
+    </div>
   </div>
 
   <script>
@@ -264,6 +328,14 @@
       } else {
         showScreen('unlocked');
       }
+
+      // Check if teacher already sent active quiz or material
+      if (data.activeQuiz) {
+        renderStudentQuiz(data.activeQuiz);
+      }
+      if (data.activeMaterial) {
+        showStudentMaterial(data.activeMaterial);
+      }
     });
 
     socket.on('join-error', (data) => {
@@ -304,6 +376,7 @@
 
       showScreen('ended');
       exitFullscreen();
+      closeStudentQuiz();
       if (lockTimerInterval) clearInterval(lockTimerInterval);
 
       // Vibrate
@@ -311,6 +384,160 @@
         navigator.vibrate([200, 100, 200, 100, 200]);
       }
     });
+
+    // Quiz broadcast from teacher
+    socket.on('new-quiz', (quiz) => {
+      renderStudentQuiz(quiz);
+    });
+
+    // Quiz result returned
+    socket.on('quiz-result', (data) => {
+      document.getElementById('student-quiz-form').style.display = 'none';
+      document.getElementById('sq-result-view').style.display = 'block';
+
+      document.getElementById('sq-result-score').textContent = `${data.correctCount} / ${data.totalQuestions}`;
+
+      const emoji = data.percentage >= 80 ? '🎉' : (data.percentage >= 50 ? '👍' : '📚');
+      document.getElementById('sq-result-emoji').textContent = emoji;
+
+      const title = data.percentage >= 80 ? 'A\'lo natija!' : (data.percentage >= 50 ? 'Yaxshi natija!' : 'Harakat qiling!');
+      document.getElementById('sq-result-title').textContent = title;
+      document.getElementById('sq-result-desc').textContent = `To'g'ri javoblar: ${data.percentage}%`;
+
+      if (navigator.vibrate) {
+        navigator.vibrate([100, 100, 200]);
+      }
+    });
+
+    // Material broadcast from teacher
+    socket.on('new-material', (material) => {
+      showStudentMaterial(material);
+    });
+
+    // ============================================
+    // STUDENT QUIZ & MATERIAL LOGIC
+    // ============================================
+    let currentStudentQuiz = null;
+    let quizTimerInterval = null;
+
+    function renderStudentQuiz(quiz) {
+      currentStudentQuiz = quiz;
+      document.getElementById('sq-title').textContent = `📝 ${quiz.title || 'Tezkor Test'}`;
+      document.getElementById('sq-qcount').textContent = `${quiz.questions.length} ta savol`;
+
+      const body = document.getElementById('sq-questions-body');
+      body.innerHTML = quiz.questions.map((q, qIndex) => {
+        const letters = ['A', 'B', 'C', 'D'];
+        const optionsHtml = q.options.map((opt, oIndex) => `
+          <label class="student-quiz-option" id="opt-label-${q.id}-${oIndex}">
+            <input type="radio" name="answer_${q.id}" value="${oIndex}" required onchange="selectQuizOption('${q.id}', ${oIndex})">
+            <span style="font-weight: 700; width: 22px; color: var(--blue-400)">${letters[oIndex]})</span>
+            <span style="flex: 1">${opt}</span>
+          </label>
+        `).join('');
+
+        return `
+          <div class="student-quiz-q">
+            <div class="student-quiz-q-title">${qIndex + 1}. ${q.text}</div>
+            <div>${optionsHtml}</div>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('student-quiz-form').style.display = 'block';
+      document.getElementById('sq-result-view').style.display = 'none';
+      document.getElementById('sq-submit-btn').disabled = false;
+      document.getElementById('sq-submit-btn').textContent = 'Javoblarni Topshirish 🚀';
+
+      if (quiz.timeLimit && quiz.timeLimit > 0) {
+        let secondsLeft = quiz.timeLimit * 60;
+        const timerBadge = document.getElementById('sq-timer-badge');
+        const timerVal = document.getElementById('sq-timer-val');
+        timerBadge.style.display = 'flex';
+
+        if (quizTimerInterval) clearInterval(quizTimerInterval);
+        quizTimerInterval = setInterval(() => {
+          secondsLeft--;
+          const m = String(Math.floor(secondsLeft / 60)).padStart(2, '0');
+          const s = String(secondsLeft % 60).padStart(2, '0');
+          timerVal.textContent = `${m}:${s}`;
+
+          if (secondsLeft <= 0) {
+            clearInterval(quizTimerInterval);
+            submitStudentQuiz();
+          }
+        }, 1000);
+      } else {
+        document.getElementById('sq-timer-badge').style.display = 'none';
+      }
+
+      document.getElementById('student-quiz-overlay').style.display = 'flex';
+
+      if (navigator.vibrate) {
+        navigator.vibrate([100, 50, 100]);
+      }
+    }
+
+    function selectQuizOption(qId, oIndex) {
+      document.querySelectorAll(`[id^="opt-label-${qId}-"]`).forEach(l => l.classList.remove('selected'));
+      const activeLabel = document.getElementById(`opt-label-${qId}-${oIndex}`);
+      if (activeLabel) activeLabel.classList.add('selected');
+    }
+
+    function submitStudentQuiz(e) {
+      if (e) e.preventDefault();
+      if (!currentStudentQuiz || !sessionId || !studentId) return;
+
+      const answers = {};
+      currentStudentQuiz.questions.forEach(q => {
+        const checked = document.querySelector(`input[name="answer_${q.id}"]:checked`);
+        if (checked) {
+          answers[q.id] = checked.value;
+        }
+      });
+
+      const studentName = document.getElementById('student-name').value || 'O\'quvchi';
+
+      socket.emit('student-submit-quiz', {
+        sessionId,
+        studentId,
+        studentName,
+        quizId: currentStudentQuiz.quizId,
+        answers
+      });
+
+      if (quizTimerInterval) clearInterval(quizTimerInterval);
+      document.getElementById('sq-submit-btn').disabled = true;
+      document.getElementById('sq-submit-btn').textContent = 'Tekshirilmoqda...';
+    }
+
+    function closeStudentQuiz() {
+      document.getElementById('student-quiz-overlay').style.display = 'none';
+      if (quizTimerInterval) clearInterval(quizTimerInterval);
+    }
+
+    function showStudentMaterial(material) {
+      document.getElementById('sm-title').textContent = material.title || 'Dars Materiali';
+      document.getElementById('sm-text').textContent = material.text || 'Ustoz dars materiali yubordi:';
+
+      const linkBtn = document.getElementById('sm-link-btn');
+      if (material.url) {
+        linkBtn.href = material.url;
+        linkBtn.style.display = 'inline-flex';
+      } else {
+        linkBtn.style.display = 'none';
+      }
+
+      document.getElementById('student-material-modal').classList.add('active');
+
+      if (navigator.vibrate) {
+        navigator.vibrate(200);
+      }
+    }
+
+    function closeStudentMaterial() {
+      document.getElementById('student-material-modal').classList.remove('active');
+    }
 
     // ============================================
     // SCREEN MANAGEMENT
