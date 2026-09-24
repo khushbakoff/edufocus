@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="EduFocus - O'qituvchi hisobiga kirish">
+  <title>Kirish — EduFocus</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>">
+</head>
+<body>
+  <div class="bg-pattern"></div>
+
+  <div class="auth-page">
+    <div class="auth-card">
+      <div class="auth-header">
+        <a href="/" class="logo">
+          <div class="logo-icon">🎓</div>
+          <span>EduFocus</span>
+        </a>
+        <h1 class="auth-title">Tizimga Kirish</h1>
+        <p class="auth-subtitle">Dashboardga kirish uchun ma'lumotlaringizni kiriting</p>
+      </div>
+
+      <div id="error-msg" class="form-error"></div>
+
+      <form id="login-form">
+        <div class="form-group">
+          <label class="form-label" for="email">Email</label>
+          <div class="input-icon-wrap">
+            <span class="input-icon">📧</span>
+            <input type="email" id="email" class="form-input" placeholder="sizning@email.com" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="password">Parol</label>
+          <div class="input-icon-wrap">
+            <span class="input-icon">🔒</span>
+            <input type="password" id="password" class="form-input" placeholder="Parolingiz" required>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg" style="width: 100%" id="login-btn">
+          Kirish
+        </button>
+      </form>
+
+      <div class="form-footer">
+        Hisobingiz yo'qmi? <a href="/register.html">Ro'yxatdan o'tish</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Check if already logged in
+    const token = localStorage.getItem('edufocus_token');
+    if (token) {
+      window.location.href = '/dashboard.html';
+    }
+
+    const form = document.getElementById('login-form');
+    const errorMsg = document.getElementById('error-msg');
+    const loginBtn = document.getElementById('login-btn');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorMsg.style.display = 'none';
+
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      loginBtn.disabled = true;
+      loginBtn.innerHTML = '<div class="spinner"></div> Kirish...';
+
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          localStorage.setItem('edufocus_token', data.token);
+          localStorage.setItem('edufocus_teacher', JSON.stringify(data.teacher));
+          window.location.href = '/dashboard.html';
+        } else {
+          errorMsg.textContent = data.error || 'Kirish xatosi';
+          errorMsg.style.display = 'block';
+        }
+      } catch (err) {
+        errorMsg.textContent = 'Server bilan aloqa uzildi';
+        errorMsg.style.display = 'block';
+      } finally {
+        loginBtn.disabled = false;
+        loginBtn.innerHTML = 'Kirish';
+      }
+    });
+  </script>
+</body>
+</html>

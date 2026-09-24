@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="EduFocus - O'qituvchi boshqaruv paneli">
+  <title>Dashboard — EduFocus</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>">
+  <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+  <div class="bg-pattern"></div>
+
+  <div class="dashboard">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-icon">🎓</div>
+        <span class="logo-text">EduFocus</span>
+      </div>
+
+      <nav class="sidebar-nav">
+        <button class="nav-item active" data-page="dashboard" id="nav-dashboard">
+          <span class="nav-icon">🏠</span>
+          Dashboard
+        </button>
+        <button class="nav-item" data-page="sessions" id="nav-sessions">
+          <span class="nav-icon">📚</span>
+          Sessiyalar
+        </button>
+        <button class="nav-item" data-page="students" id="nav-students">
+          <span class="nav-icon">👥</span>
+          O'quvchilar
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button class="nav-item" id="logout-btn">
+          <span class="nav-icon">🚪</span>
+          Chiqish
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Topbar -->
+      <header class="topbar">
+        <div style="display:flex; align-items:center; gap:12px">
+          <button class="hamburger" id="hamburger-btn">
+            <span></span><span></span><span></span>
+          </button>
+          <h1 class="topbar-title" id="page-title">Dashboard</h1>
+        </div>
+        <div class="topbar-right">
+          <div class="user-info">
+            <div class="user-avatar" id="user-avatar">I</div>
+            <div>
+              <div class="user-name" id="user-name">Ismoil</div>
+              <div class="user-role">O'qituvchi</div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Page Content -->
+      <div class="page-content">
+
+        <!-- ======================== -->
+        <!-- DASHBOARD PAGE -->
+        <!-- ======================== -->
+        <div id="page-dashboard">
+          <div class="welcome-section">
+            <h2 class="welcome-title" id="welcome-text">Xush kelibsiz! 👋</h2>
+            <p class="welcome-subtitle">Yangi dars sessiyasini boshlang yoki statistikalarni ko'ring</p>
+          </div>
+
+          <!-- Stats -->
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon blue">📚</div>
+              <div>
+                <div class="stat-value" id="stat-sessions">0</div>
+                <div class="stat-label">Jami sessiyalar</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon green">👥</div>
+              <div>
+                <div class="stat-value" id="stat-students">0</div>
+                <div class="stat-label">Jami o'quvchilar</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon purple">🟢</div>
+              <div>
+                <div class="stat-value" id="stat-active">0</div>
+                <div class="stat-label">Faol sessiyalar</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Actions -->
+          <div class="card" style="margin-bottom: 24px">
+            <div class="card-header">
+              <h3 class="card-title">Tezkor Harakatlar</h3>
+            </div>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap">
+              <button class="btn btn-primary btn-lg" id="create-session-btn" onclick="openCreateModal()">
+                <span>➕</span> Yangi Sessiya Boshlash
+              </button>
+            </div>
+          </div>
+
+          <!-- Recent Sessions -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">So'nggi Sessiyalar</h3>
+            </div>
+            <div id="recent-sessions">
+              <div class="empty-state">
+                <div class="empty-icon">📚</div>
+                <h3 class="empty-title">Hali sessiya yo'q</h3>
+                <p class="empty-text">Birinchi dars sessiyangizni boshlang!</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ======================== -->
+        <!-- ACTIVE SESSION PAGE -->
+        <!-- ======================== -->
+        <div id="page-sessions" style="display:none">
+          <!-- No active session -->
+          <div id="no-session">
+            <div class="empty-state">
+              <div class="empty-icon">📷</div>
+              <h3 class="empty-title">Faol sessiya yo'q</h3>
+              <p class="empty-text">Yangi dars sessiyasi yarating va QR kodni o'quvchilarga ko'rsating</p>
+              <button class="btn btn-primary btn-lg" onclick="openCreateModal()">
+                <span>➕</span> Yangi Sessiya Boshlash
+              </button>
+            </div>
+          </div>
+
+          <!-- Active Session View -->
+          <div id="active-session" style="display:none">
+            <div class="session-grid">
+              <!-- Left: QR Code & Controls -->
+              <div class="card">
+                <div class="qr-section">
+                  <div class="qr-container">
+                    <img id="session-qr" src="" alt="QR Code">
+                  </div>
+                  <h2 class="session-name" id="session-name-display">—</h2>
+                  <p class="session-subject" id="session-subject-display">—</p>
+
+                  <div class="session-timer" id="session-timer">00:00</div>
+
+                  <div id="session-status-badge" class="session-status status-locked">
+                    <span class="status-dot"></span>
+                    <span id="session-status-text">Bloklangan</span>
+                  </div>
+
+                  <div class="session-actions">
+                    <button class="btn btn-success" id="unlock-btn" onclick="toggleLock()">
+                      🔓 Ruxsat Berish
+                    </button>
+                    <button class="btn btn-outline" onclick="regenerateQR()">
+                      🔄 QR Yangilash
+                    </button>
+                    <button class="btn btn-danger" onclick="endSession()">
+                      ⏹ Sessiyani Tugatish
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right: Students & Stats -->
+              <div>
+                <!-- Progress -->
+                <div class="card" style="margin-bottom: 16px">
+                  <div class="card-header">
+                    <h3 class="card-title">Skanerlangan</h3>
+                    <span class="count-badge" id="student-count-badge">0</span>
+                  </div>
+                  <div class="progress-ring-container">
+                    <div class="progress-ring">
+                      <svg width="140" height="140">
+                        <circle class="progress-ring-bg" cx="70" cy="70" r="60"></circle>
+                        <circle class="progress-ring-fill" id="progress-circle" cx="70" cy="70" r="60"
+                          stroke-dasharray="377" stroke-dashoffset="377"></circle>
+                      </svg>
+                      <div class="progress-ring-text">
+                        <span class="progress-value" id="progress-value">0</span>
+                        <span class="progress-label">o'quvchi</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Students List -->
+                <div class="card" style="margin-bottom: 16px">
+                  <div class="card-header">
+                    <h3 class="card-title">O'quvchilar Ro'yxati</h3>
+                  </div>
+                  <div style="overflow-x: auto">
+                    <table class="students-table" id="students-table">
+                      <thead>
+                        <tr>
+                          <th>Ism</th>
+                          <th>Qurilma</th>
+                          <th>Vaqt</th>
+                          <th>Status</th>
+                        </tr>
+                      </thead>
+                      <tbody id="students-tbody">
+                      </tbody>
+                    </table>
+                    <div id="no-students" class="empty-state" style="padding: 30px">
+                      <div class="empty-icon" style="font-size:40px">👥</div>
+                      <p class="empty-text">Hali hech kim skanerlmagan</p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Activity Log -->
+                <div class="card">
+                  <div class="card-header">
+                    <h3 class="card-title">Faoliyat Jurnali</h3>
+                  </div>
+                  <div class="activity-log" id="activity-log">
+                    <div class="activity-item">
+                      <span class="activity-icon">🟢</span>
+                      <span class="activity-text">Sessiya boshlandi</span>
+                      <span class="activity-time" id="session-start-time">—</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ======================== -->
+        <!-- STUDENTS LIST PAGE -->
+        <!-- ======================== -->
+        <div id="page-students" style="display:none">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Barcha O'quvchilar Tarixi</h3>
+            </div>
+            <div id="all-students-list">
+              <div class="empty-state">
+                <div class="empty-icon">👥</div>
+                <h3 class="empty-title">O'quvchilar yo'q</h3>
+                <p class="empty-text">Sessiya boshlang va o'quvchilar QR kodni skanerlashini kuting</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Create Session Modal -->
+  <div class="modal-overlay" id="create-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title">Yangi Sessiya</h2>
+        <button class="modal-close" onclick="closeCreateModal()">✕</button>
+      </div>
+
+      <form id="create-session-form">
+        <div class="form-group">
+          <label class="form-label" for="session-name">Dars nomi</label>
+          <input type="text" id="session-name" class="form-input" placeholder="Masalan: Matematika - 3-kurs" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="session-subject">Fan (predmet)</label>
+          <input type="text" id="session-subject" class="form-input" placeholder="Masalan: Oliy matematika" id="session-subject-input">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="session-duration">Dars davomiyligi (daqiqa)</label>
+          <input type="number" id="session-duration" class="form-input" value="45" min="5" max="180">
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg" style="width:100%">
+          <span>🚀</span> Sessiyani Boshlash
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <script>
+    // ============================================
+    // AUTH CHECK
+    // ============================================
+    const token = localStorage.getItem('edufocus_token');
+    const teacherData = JSON.parse(localStorage.getItem('edufocus_teacher') || '{}');
+
+    if (!token) {
+      window.location.href = '/login.html';
+    }
+
+    // Set user info
+    document.getElementById('user-name').textContent = `${teacherData.name || ''} ${teacherData.surname || ''}`;
+    document.getElementById('user-avatar').textContent = (teacherData.name || 'U')[0].toUpperCase();
+    document.getElementById('welcome-text').textContent = `Xush kelibsiz, ${teacherData.name || 'Ustoz'}! 👋`;
+
+    // ============================================
+    // SOCKET CONNECTION
+    // ============================================
+    const socket = io();
+    let currentSession = null;
+    let timerInterval = null;
+    let sessionStartTime = null;
+
+    // ============================================
+    // NAVIGATION
+    // ============================================
+    const navItems = document.querySelectorAll('.nav-item[data-page]');
+    const pages = {
+      dashboard: document.getElementById('page-dashboard'),
+      sessions: document.getElementById('page-sessions'),
+      students: document.getElementById('page-students')
+    };
+
+    navItems.forEach(item => {
+      item.addEventListener('click', () => {
+        const page = item.dataset.page;
+        navItems.forEach(n => n.classList.remove('active'));
+        item.classList.add('active');
+
+        Object.values(pages).forEach(p => p.style.display = 'none');
+        pages[page].style.display = 'block';
+
+        const titles = { dashboard: 'Dashboard', sessions: 'Sessiyalar', students: 'O\'quvchilar' };
+        document.getElementById('page-title').textContent = titles[page] || 'Dashboard';
+
+        // Close sidebar on mobile
+        document.getElementById('sidebar').classList.remove('open');
+      });
+    });
+
+    // Hamburger menu
+    document.getElementById('hamburger-btn').addEventListener('click', () => {
+      document.getElementById('sidebar').classList.toggle('open');
+    });
+
+    // Logout
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      localStorage.removeItem('edufocus_token');
+      localStorage.removeItem('edufocus_teacher');
+      window.location.href = '/login.html';
+    });
+
+    // ============================================
+    // TOAST NOTIFICATIONS
+    // ============================================
+    function showToast(message, type = 'info', icon = 'ℹ️') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('uz', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+      toast.innerHTML = `
+        <span class="toast-icon">${icon}</span>
+        <span class="toast-message">${message}</span>
+        <span class="toast-time">${timeStr}</span>
+      `;
+
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.animation = 'fadeOut 0.3s ease forwards';
+        setTimeout(() => toast.remove(), 300);
+      }, 5000);
+    }
+
+    // ============================================
+    // CREATE SESSION
+    // ============================================
+    function openCreateModal() {
+      document.getElementById('create-modal').classList.add('active');
+      // Pre-fill subject from teacher data
+      const subjectInput = document.getElementById('session-subject');
+      if (teacherData.subject && !subjectInput.value) {
+        subjectInput.value = teacherData.subject;
+      }
+    }
+
+    function closeCreateModal() {
+      document.getElementById('create-modal').classList.remove('active');
+    }
+
+    document.getElementById('create-session-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const name = document.getElementById('session-name').value;
+      const subject = document.getElementById('session-subject').value;
+      const duration = parseInt(document.getElementById('session-duration').value);
+
+      try {
+        const res = await fetch('/api/sessions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ name, subject, duration })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          currentSession = data.session;
+          closeCreateModal();
+          showActiveSession(data.session);
+          showToast('Sessiya boshlandi! QR kodni doskada ko\'rsating', 'success', '🎉');
+
+          // Switch to sessions page
+          document.querySelector('[data-page="sessions"]').click();
+
+          // Join teacher monitoring room
+          socket.emit('teacher-monitor', { sessionId: data.session.id });
+
+          // Start timer
+          startTimer(duration);
+
+          // Reload stats
+          loadStats();
+        } else {
+          showToast(data.error || 'Xatolik yuz berdi', 'error', '❌');
+        }
+      } catch (err) {
+        showToast('Server bilan aloqa uzildi', 'error', '❌');
+      }
+    });
+
+    // ============================================
+    // SESSION DISPLAY
+    // ============================================
+    function showActiveSession(session) {
+      document.getElementById('no-session').style.display = 'none';
+      document.getElementById('active-session').style.display = 'block';
+
+      document.getElementById('session-qr').src = session.qrCode;
+      document.getElementById('session-name-display').textContent = session.name;
+      document.getElementById('session-subject-display').textContent = session.subject || session.name;
+
+      const now = new Date();
+      document.getElementById('session-start-time').textContent = now.toLocaleTimeString('uz', { hour: '2-digit', minute: '2-digit' });
+
+      updateLockUI(session.locked);
+    }
+
+    function updateLockUI(locked) {
+      const badge = document.getElementById('session-status-badge');
+      const statusText = document.getElementById('session-status-text');
+      const unlockBtn = document.getElementById('unlock-btn');
+
+      if (locked) {
+        badge.className = 'session-status status-locked';
+        statusText.textContent = 'Bloklangan';
+        unlockBtn.innerHTML = '🔓 Ruxsat Berish';
+        unlockBtn.className = 'btn btn-success';
+      } else {
+        badge.className = 'session-status status-active';
+        statusText.textContent = 'Ruxsat berilgan';
+        unlockBtn.innerHTML = '🔒 Bloklash';
+        unlockBtn.className = 'btn btn-warning';
+      }
+    }
+
+    // ============================================
+    // TIMER
+    // ============================================
+    function startTimer(durationMinutes) {
+      let totalSeconds = durationMinutes * 60;
+      sessionStartTime = Date.now();
+
+      if (timerInterval) clearInterval(timerInterval);
+
+      timerInterval = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - sessionStartTime) / 1000);
+        const remaining = Math.max(0, totalSeconds - elapsed);
+
+        const mins = Math.floor(remaining / 60).toString().padStart(2, '0');
+        const secs = (remaining % 60).toString().padStart(2, '0');
+
+        document.getElementById('session-timer').textContent = `${mins}:${secs}`;
+
+        if (remaining <= 0) {
+          clearInterval(timerInterval);
+          showToast('Dars vaqti tugadi!', 'warning', '⏰');
+        }
+      }, 1000);
+    }
+
+    // ============================================
+    // SESSION CONTROLS
+    // ============================================
+    async function toggleLock() {
+      if (!currentSession) return;
+
+      const endpoint = currentSession.locked ? 'unlock' : 'lock';
+
+      try {
+        const res = await fetch(`/api/sessions/${currentSession.id}/${endpoint}`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          currentSession.locked = !currentSession.locked;
+          updateLockUI(currentSession.locked);
+
+          if (currentSession.locked) {
+            showToast('O\'quvchilar telefoni bloklandi', 'warning', '🔒');
+            addActivity('🔒', 'Telefonlar bloklandi');
+          } else {
+            showToast('O\'quvchilarga ruxsat berildi', 'success', '🔓');
+            addActivity('🔓', 'O\'quvchilarga ruxsat berildi');
+          }
+        }
+      } catch (err) {
+        showToast('Xatolik yuz berdi', 'error', '❌');
+      }
+    }
+
+    async function regenerateQR() {
+      if (!currentSession) return;
+
+      try {
+        const res = await fetch(`/api/sessions/${currentSession.id}/regenerate-qr`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          document.getElementById('session-qr').src = data.qrCode;
+          currentSession.qrCode = data.qrCode;
+          showToast('QR code yangilandi', 'info', '🔄');
+          addActivity('🔄', 'QR code yangilandi');
+        }
+      } catch (err) {
+        showToast('Xatolik yuz berdi', 'error', '❌');
+      }
+    }
+
+    async function endSession() {
+      if (!currentSession) return;
+      if (!confirm('Sessiyani tugatmoqchimisiz?')) return;
+
+      try {
+        const res = await fetch(`/api/sessions/${currentSession.id}/end`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          if (timerInterval) clearInterval(timerInterval);
+
+          document.getElementById('active-session').style.display = 'none';
+          document.getElementById('no-session').style.display = 'block';
+
+          showToast('Sessiya tugatildi', 'success', '✅');
+
+          // Reset
+          document.getElementById('students-tbody').innerHTML = '';
+          document.getElementById('no-students').style.display = 'block';
+          document.getElementById('activity-log').innerHTML = '';
+          currentSession = null;
+
+          loadStats();
+        }
+      } catch (err) {
+        showToast('Xatolik yuz berdi', 'error', '❌');
+      }
+    }
+
+    // ============================================
+    // STUDENTS TABLE
+    // ============================================
+    function addStudentToTable(student) {
+      document.getElementById('no-students').style.display = 'none';
+
+      const tbody = document.getElementById('students-tbody');
+      const time = new Date(student.joinedAt).toLocaleTimeString('uz', {
+        hour: '2-digit', minute: '2-digit', second: '2-digit'
+      });
+
+      const initials = student.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+
+      const row = document.createElement('tr');
+      row.id = `student-row-${student.id}`;
+      row.innerHTML = `
+        <td>
+          <div class="student-name-cell">
+            <div class="student-avatar">${initials}</div>
+            <span>${student.name}</span>
+          </div>
+        </td>
+        <td style="color: var(--text-secondary); font-size: 13px">${student.device}</td>
+        <td style="color: var(--text-secondary); font-size: 13px">${time}</td>
+        <td><span class="badge badge-green" id="student-status-${student.id}">✅ Faol</span></td>
+      `;
+
+      tbody.insertBefore(row, tbody.firstChild);
+
+      // Update counter
+      updateStudentCount();
+    }
+
+    function updateStudentCount() {
+      if (!currentSession) return;
+      const count = currentSession.students.length;
+
+      document.getElementById('student-count-badge').textContent = count;
+      document.getElementById('progress-value').textContent = count;
+
+      // Update progress ring (assume max 50 students for visual)
+      const maxStudents = Math.max(count, 30);
+      const percentage = (count / maxStudents);
+      const circumference = 2 * Math.PI * 60; // r=60
+      const offset = circumference * (1 - percentage);
+      document.getElementById('progress-circle').style.strokeDashoffset = offset;
+    }
+
+    // ============================================
+    // ACTIVITY LOG
+    // ============================================
+    function addActivity(icon, text) {
+      const log = document.getElementById('activity-log');
+      const time = new Date().toLocaleTimeString('uz', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+      const item = document.createElement('div');
+      item.className = 'activity-item';
+      item.innerHTML = `
+        <span class="activity-icon">${icon}</span>
+        <span class="activity-text">${text}</span>
+        <span class="activity-time">${time}</span>
+      `;
+
+      log.insertBefore(item, log.firstChild);
+
+      // Keep max 50 items
+      while (log.children.length > 50) {
+        log.removeChild(log.lastChild);
+      }
+    }
+
+    // ============================================
+    // SOCKET EVENTS
+    // ============================================
+    socket.on('student-joined', (data) => {
+      if (currentSession) {
+        currentSession.students.push(data.student);
+        addStudentToTable(data.student);
+        addActivity('📱', `${data.student.name} darsga qo'shildi (${data.student.device})`);
+        showToast(`${data.student.name} darsga qo'shildi!`, 'success', '📱');
+      }
+    });
+
+    socket.on('student-violation', (data) => {
+      const statusEl = document.getElementById(`student-status-${data.student.id}`);
+      if (statusEl) {
+        statusEl.className = 'badge badge-red';
+        statusEl.textContent = '⚠️ Chiqib ketdi';
+      }
+      addActivity('⚠️', data.message);
+      showToast(data.message, 'warning', '⚠️');
+    });
+
+    socket.on('student-returned', (data) => {
+      const statusEl = document.getElementById(`student-status-${data.student.id}`);
+      if (statusEl) {
+        statusEl.className = 'badge badge-green';
+        statusEl.textContent = '✅ Faol';
+      }
+      addActivity('✅', data.message);
+    });
+
+    socket.on('student-disconnected', (data) => {
+      const statusEl = document.getElementById(`student-status-${data.student.id}`);
+      if (statusEl) {
+        statusEl.className = 'badge badge-yellow';
+        statusEl.textContent = '🔴 Uzildi';
+      }
+      addActivity('🔴', data.message);
+      showToast(data.message, 'error', '🔴');
+      updateStudentCount();
+    });
+
+    // ============================================
+    // LOAD STATS
+    // ============================================
+    async function loadStats() {
+      try {
+        const res = await fetch('/api/stats', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        const data = await res.json();
+
+        document.getElementById('stat-sessions').textContent = data.totalSessions;
+        document.getElementById('stat-students').textContent = data.totalStudents;
+        document.getElementById('stat-active').textContent = data.activeSessions;
+
+        // Recent sessions
+        if (data.recentSessions && data.recentSessions.length > 0) {
+          const container = document.getElementById('recent-sessions');
+          container.innerHTML = '<div class="history-list">' +
+            data.recentSessions.map(s => {
+              const date = new Date(s.createdAt).toLocaleDateString('uz', {
+                day: '2-digit', month: '2-digit', year: 'numeric'
+              });
+              const time = new Date(s.createdAt).toLocaleTimeString('uz', {
+                hour: '2-digit', minute: '2-digit'
+              });
+              const statusClass = s.status === 'active' ? 'badge-green' : 'badge-blue';
+              const statusText = s.status === 'active' ? 'Faol' : 'Tugagan';
+
+              return `
+                <div class="history-item">
+                  <div class="history-info">
+                    <div class="history-icon">📚</div>
+                    <div>
+                      <div class="history-name">${s.name}</div>
+                      <div class="history-meta">${s.subject || s.name}</div>
+                    </div>
+                  </div>
+                  <div class="history-stats">
+                    <div class="history-student-count">👥 ${s.students ? s.students.length : 0} o'quvchi</div>
+                    <div class="history-date">${date} ${time}</div>
+                  </div>
+                </div>
+              `;
+            }).join('') +
+            '</div>';
+        }
+
+        // Build all students list
+        buildAllStudentsList(data.recentSessions);
+
+      } catch (err) {
+        console.error('Stats yuklanmadi:', err);
+      }
+    }
+
+    function buildAllStudentsList(sessions) {
+      if (!sessions || sessions.length === 0) return;
+
+      const allStudents = [];
+      sessions.forEach(s => {
+        if (s.students) {
+          s.students.forEach(st => {
+            allStudents.push({ ...st, sessionName: s.name });
+          });
+        }
+      });
+
+      if (allStudents.length === 0) return;
+
+      const container = document.getElementById('all-students-list');
+      container.innerHTML = `
+        <div style="overflow-x: auto">
+          <table class="students-table">
+            <thead>
+              <tr>
+                <th>Ism</th>
+                <th>Qurilma</th>
+                <th>Sessiya</th>
+                <th>Vaqt</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${allStudents.map(st => {
+                const time = new Date(st.joinedAt).toLocaleString('uz', {
+                  day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
+                });
+                const initials = st.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+                return `
+                  <tr>
+                    <td>
+                      <div class="student-name-cell">
+                        <div class="student-avatar">${initials}</div>
+                        <span>${st.name}</span>
+                      </div>
+                    </td>
+                    <td style="color:var(--text-secondary);font-size:13px">${st.device}</td>
+                    <td style="font-size:13px">${st.sessionName}</td>
+                    <td style="color:var(--text-secondary);font-size:13px">${time}</td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    // ============================================
+    // LOAD ACTIVE SESSION
+    // ============================================
+    async function loadActiveSessions() {
+      try {
+        const res = await fetch('/api/sessions', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        const sessions = await res.json();
+        const active = sessions.find(s => s.status === 'active');
+
+        if (active) {
+          currentSession = active;
+          showActiveSession(active);
+
+          // Rejoin teacher monitoring
+          socket.emit('teacher-monitor', { sessionId: active.id });
+
+          // Show existing students
+          if (active.students) {
+            active.students.forEach(st => addStudentToTable(st));
+          }
+
+          // Calculate remaining time
+          const elapsed = Math.floor((Date.now() - new Date(active.createdAt).getTime()) / 1000 / 60);
+          const remaining = Math.max(1, active.duration - elapsed);
+          startTimer(remaining);
+        }
+      } catch (err) {
+        console.error('Sessiyalar yuklanmadi:', err);
+      }
+    }
+
+    // ============================================
+    // INIT
+    // ============================================
+    loadStats();
+    loadActiveSessions();
+  </script>
+</body>
+</html>

@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="description" content="EduFocus - Darsga qo'shilish">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>EduFocus — Darsga qo'shilish</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>">
+  <script src="/socket.io/socket.io.js"></script>
+  <style>
+    /* Prevent pull-to-refresh */
+    html, body {
+      overscroll-behavior: none;
+      overflow: hidden;
+      touch-action: none;
+    }
+  </style>
+</head>
+<body>
+  <!-- ======================== -->
+  <!-- SCREEN 1: JOIN FORM -->
+  <!-- ======================== -->
+  <div id="screen-join" class="student-page">
+    <div class="student-card">
+      <div class="student-logo">
+        <div class="logo-icon" style="width:32px;height:32px;font-size:16px">🎓</div>
+        <span>EduFocus</span>
+      </div>
+
+      <h1 class="student-title">Darsga Xush Kelibsiz!</h1>
+      <p class="student-subtitle" id="session-info">Darsga qo'shilish uchun ismingizni kiriting</p>
+
+      <div id="join-error" class="form-error" style="text-align:center"></div>
+
+      <form id="join-form">
+        <div class="form-group">
+          <label class="form-label" for="student-name">Ismingizni kiriting</label>
+          <div class="input-icon-wrap">
+            <span class="input-icon">👤</span>
+            <input type="text" id="student-name" class="form-input" placeholder="Masalan: Ali Karimov" required autofocus autocomplete="name">
+          </div>
+        </div>
+
+        <div class="device-info" id="device-info">
+          <div class="device-item">
+            <span>📱</span>
+            <span id="device-model">Qurilma aniqlanmoqda...</span>
+          </div>
+          <div class="device-item">
+            <span>🕐</span>
+            <span id="device-time">—</span>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg" style="width:100%" id="join-btn">
+          Darsga Qo'shilish
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ======================== -->
+  <!-- SCREEN 2: LOCK SCREEN -->
+  <!-- ======================== -->
+  <div id="screen-lock" class="lock-screen" style="display:none">
+    <div class="lock-icon">🔒</div>
+    <h1 class="lock-title">Telefon Bloklangan</h1>
+    <p class="lock-session-name" id="lock-session-name">—</p>
+    <div class="lock-timer" id="lock-timer">00:00</div>
+    <p class="lock-message">Ustoz ruxsat berguncha kuting</p>
+    <div class="lock-warning">
+      <span>⚠️</span>
+      <span>Sahifadan chiqsangiz, ustoz xabardor bo'ladi</span>
+    </div>
+  </div>
+
+  <!-- ======================== -->
+  <!-- SCREEN 3: UNLOCKED -->
+  <!-- ======================== -->
+  <div id="screen-unlocked" class="end-screen" style="display:none">
+    <div class="end-icon">🔓</div>
+    <h1 class="end-title" style="color: var(--blue-400)">Ruxsat Berildi!</h1>
+    <p class="end-message">Ustoz telefoningizdan foydalanishga ruxsat berdi</p>
+
+    <div class="end-stats">
+      <div class="end-stat-row">
+        <span class="end-stat-label">Sessiya</span>
+        <span class="end-stat-value" id="unlocked-session">—</span>
+      </div>
+      <div class="end-stat-row">
+        <span class="end-stat-label">Status</span>
+        <span class="end-stat-value" style="color: var(--blue-400)">Ruxsat berildi</span>
+      </div>
+    </div>
+
+    <p style="font-size: 13px; color: var(--text-muted)">Ustoz qayta bloklashi mumkin</p>
+  </div>
+
+  <!-- ======================== -->
+  <!-- SCREEN 4: SESSION ENDED -->
+  <!-- ======================== -->
+  <div id="screen-ended" class="end-screen" style="display:none">
+    <div class="end-icon">✅</div>
+    <h1 class="end-title">Dars Tugadi!</h1>
+    <p class="end-message">Rahmat! Diqqatingiz uchun tashakkur.</p>
+
+    <div class="end-stats">
+      <div class="end-stat-row">
+        <span class="end-stat-label">Qatnashish vaqti</span>
+        <span class="end-stat-value" id="end-duration">—</span>
+      </div>
+      <div class="end-stat-row">
+        <span class="end-stat-label">Status</span>
+        <span class="end-stat-value" style="color: var(--green-400)">To'liq qatnashdi</span>
+      </div>
+    </div>
+
+    <div class="end-badge">⭐ Ajoyib!</div>
+  </div>
+
+  <!-- ======================== -->
+  <!-- SCREEN: ERROR -->
+  <!-- ======================== -->
+  <div id="screen-error" class="end-screen" style="display:none">
+    <div class="end-icon">❌</div>
+    <h1 class="end-title" style="color: var(--red-400)">Xatolik</h1>
+    <p class="end-message" id="error-message">Sessiya topilmadi yoki tugagan</p>
+  </div>
+
+  <script>
+    // ============================================
+    // GET SESSION ID FROM URL
+    // ============================================
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get('session');
+
+    if (!sessionId) {
+      showScreen('error');
+      document.getElementById('error-message').textContent = 'Noto\'g\'ri havola. QR kodni qaytadan skanerlang.';
+    }
+
+    // ============================================
+    // SOCKET & STATE
+    // ============================================
+    const socket = io();
+    let studentId = null;
+    let joinTime = null;
+    let lockTimerInterval = null;
+    let isLocked = true;
+
+    // ============================================
+    // DEVICE DETECTION
+    // ============================================
+    function getDeviceInfo() {
+      const ua = navigator.userAgent;
+      let device = 'Noma\'lum qurilma';
+
+      if (/iPhone/.test(ua)) {
+        const match = ua.match(/iPhone\s*(?:OS\s*)?(\d+[_\d]*)?/);
+        device = 'iPhone' + (match ? ' (iOS ' + match[1]?.replace(/_/g, '.') + ')' : '');
+      } else if (/iPad/.test(ua)) {
+        device = 'iPad';
+      } else if (/Samsung|SM-/.test(ua)) {
+        const match = ua.match(/SM-[\w]+/);
+        device = 'Samsung ' + (match ? match[0] : 'Galaxy');
+      } else if (/Xiaomi|Redmi|POCO/.test(ua)) {
+        device = ua.match(/Xiaomi|Redmi\s*\w+|POCO\s*\w+/)?.[0] || 'Xiaomi';
+      } else if (/HUAWEI|Honor/.test(ua)) {
+        device = ua.match(/HUAWEI\s*[\w-]+|Honor\s*[\w-]+/)?.[0] || 'Huawei';
+      } else if (/OPPO|vivo|realme|OnePlus/.test(ua)) {
+        device = ua.match(/OPPO\s*[\w]+|vivo\s*[\w]+|realme\s*[\w]+|OnePlus\s*[\w]+/)?.[0] || 'Android';
+      } else if (/Android/.test(ua)) {
+        const match = ua.match(/;\s*([\w\s]+)\s*Build/);
+        device = match ? match[1].trim() : 'Android qurilma';
+      } else if (/Windows/.test(ua)) {
+        device = 'Windows PC';
+      } else if (/Mac/.test(ua)) {
+        device = 'MacBook / Mac';
+      } else if (/Linux/.test(ua)) {
+        device = 'Linux qurilma';
+      }
+
+      return device;
+    }
+
+    const deviceModel = getDeviceInfo();
+    document.getElementById('device-model').textContent = deviceModel;
+
+    // Update time
+    function updateTime() {
+      document.getElementById('device-time').textContent =
+        new Date().toLocaleTimeString('uz', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+    updateTime();
+    setInterval(updateTime, 1000);
+
+    // ============================================
+    // LOAD SESSION INFO
+    // ============================================
+    async function loadSessionInfo() {
+      if (!sessionId) return;
+
+      try {
+        const res = await fetch(`/api/sessions/${sessionId}`);
+        const data = await res.json();
+
+        if (data.id) {
+          if (data.status !== 'active') {
+            showScreen('error');
+            document.getElementById('error-message').textContent = 'Bu sessiya allaqachon tugagan.';
+            return;
+          }
+          document.getElementById('session-info').textContent = `${data.name} — ${data.subject || ''}`;
+        } else {
+          showScreen('error');
+          document.getElementById('error-message').textContent = 'Sessiya topilmadi. QR kodni tekshiring.';
+        }
+      } catch (err) {
+        // Might fail, but continue anyway
+        console.log('Session info could not be loaded');
+      }
+    }
+
+    loadSessionInfo();
+
+    // ============================================
+    // JOIN FORM
+    // ============================================
+    document.getElementById('join-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const name = document.getElementById('student-name').value.trim();
+      if (!name) return;
+
+      const joinBtn = document.getElementById('join-btn');
+      joinBtn.disabled = true;
+      joinBtn.innerHTML = '<div class="spinner"></div> Qo\'shilmoqda...';
+
+      socket.emit('student-join', {
+        sessionId: sessionId,
+        studentName: name,
+        device: deviceModel
+      });
+    });
+
+    // ============================================
+    // SOCKET EVENTS
+    // ============================================
+    socket.on('join-success', (data) => {
+      studentId = data.studentId;
+      joinTime = Date.now();
+      isLocked = data.locked;
+
+      document.getElementById('lock-session-name').textContent = `${data.sessionName} — ${data.subject || ''}`;
+      document.getElementById('unlocked-session').textContent = data.sessionName;
+
+      if (isLocked) {
+        showScreen('lock');
+        startLockTimer(data.duration);
+        requestFullscreen();
+      } else {
+        showScreen('unlocked');
+      }
+    });
+
+    socket.on('join-error', (data) => {
+      const errorEl = document.getElementById('join-error');
+      errorEl.textContent = data.message;
+      errorEl.style.display = 'block';
+
+      const joinBtn = document.getElementById('join-btn');
+      joinBtn.disabled = false;
+      joinBtn.innerHTML = 'Darsga Qo\'shilish';
+    });
+
+    socket.on('session-unlocked', (data) => {
+      isLocked = false;
+      showScreen('unlocked');
+      exitFullscreen();
+
+      // Vibrate if supported
+      if (navigator.vibrate) {
+        navigator.vibrate([200, 100, 200]);
+      }
+    });
+
+    socket.on('session-locked', (data) => {
+      isLocked = true;
+      showScreen('lock');
+      requestFullscreen();
+    });
+
+    socket.on('session-ended', (data) => {
+      isLocked = false;
+
+      // Calculate duration
+      if (joinTime) {
+        const elapsed = Math.floor((Date.now() - joinTime) / 1000 / 60);
+        document.getElementById('end-duration').textContent = `${elapsed} daqiqa`;
+      }
+
+      showScreen('ended');
+      exitFullscreen();
+      if (lockTimerInterval) clearInterval(lockTimerInterval);
+
+      // Vibrate
+      if (navigator.vibrate) {
+        navigator.vibrate([200, 100, 200, 100, 200]);
+      }
+    });
+
+    // ============================================
+    // SCREEN MANAGEMENT
+    // ============================================
+    function showScreen(screen) {
+      const screens = ['join', 'lock', 'unlocked', 'ended', 'error'];
+      screens.forEach(s => {
+        document.getElementById(`screen-${s}`).style.display = s === screen ? '' : 'none';
+      });
+    }
+
+    // ============================================
+    // LOCK TIMER
+    // ============================================
+    function startLockTimer(durationMinutes) {
+      let totalSeconds = durationMinutes * 60;
+      const startTime = Date.now();
+
+      if (lockTimerInterval) clearInterval(lockTimerInterval);
+
+      lockTimerInterval = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        const remaining = Math.max(0, totalSeconds - elapsed);
+
+        const mins = Math.floor(remaining / 60).toString().padStart(2, '0');
+        const secs = (remaining % 60).toString().padStart(2, '0');
+
+        document.getElementById('lock-timer').textContent = `${mins}:${secs}`;
+
+        if (remaining <= 0) {
+          clearInterval(lockTimerInterval);
+        }
+      }, 1000);
+    }
+
+    // ============================================
+    // FULLSCREEN API
+    // ============================================
+    function requestFullscreen() {
+      const el = document.documentElement;
+      try {
+        if (el.requestFullscreen) {
+          el.requestFullscreen().catch(() => {});
+        } else if (el.webkitRequestFullscreen) {
+          el.webkitRequestFullscreen();
+        }
+      } catch (e) {
+        // Fullscreen not supported, continue silently
+      }
+
+      // Request wake lock to prevent screen from turning off
+      requestWakeLock();
+    }
+
+    function exitFullscreen() {
+      try {
+        if (document.exitFullscreen) {
+          document.exitFullscreen().catch(() => {});
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        }
+      } catch (e) {}
+    }
+
+    // ============================================
+    // WAKE LOCK (keep screen on)
+    // ============================================
+    let wakeLock = null;
+
+    async function requestWakeLock() {
+      try {
+        if ('wakeLock' in navigator) {
+          wakeLock = await navigator.wakeLock.request('screen');
+        }
+      } catch (e) {
+        // Wake Lock not supported
+      }
+    }
+
+    // ============================================
+    // PAGE VISIBILITY (detect leaving)
+    // ============================================
+    document.addEventListener('visibilitychange', () => {
+      if (!studentId || !sessionId) return;
+
+      if (document.hidden) {
+        // Student left the page
+        socket.emit('student-left-page', {
+          sessionId: sessionId,
+          studentId: studentId
+        });
+      } else {
+        // Student returned
+        socket.emit('student-returned', {
+          sessionId: sessionId,
+          studentId: studentId
+        });
+
+        // Re-request fullscreen if locked
+        if (isLocked) {
+          requestFullscreen();
+        }
+      }
+    });
+
+    // Prevent back button
+    window.addEventListener('beforeunload', (e) => {
+      if (isLocked && studentId) {
+        e.preventDefault();
+        e.returnValue = 'Dars davom etmoqda. Sahifadan chiqmoqchimisiz?';
+      }
+    });
+
+    // Push state to prevent back navigation
+    if (sessionId) {
+      history.pushState(null, null, location.href);
+      window.addEventListener('popstate', () => {
+        if (isLocked) {
+          history.pushState(null, null, location.href);
+        }
+      });
+    }
+
+    // ============================================
+    // HANDLE RECONNECTION
+    // ============================================
+    socket.on('disconnect', () => {
+      console.log('Connection lost, attempting reconnect...');
+    });
+
+    socket.on('connect', () => {
+      // If was already joined, rejoin
+      if (studentId && sessionId) {
+        const name = document.getElementById('student-name').value;
+        socket.emit('student-join', {
+          sessionId: sessionId,
+          studentName: name || 'Qayta ulanish',
+          device: deviceModel
+        });
+      }
+    });
+  </script>
+</body>
+</html>

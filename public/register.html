@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="EduFocus - O'qituvchi ro'yxatdan o'tish">
+  <title>Ro'yxatdan O'tish — EduFocus</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>">
+</head>
+<body>
+  <div class="bg-pattern"></div>
+
+  <div class="auth-page">
+    <div class="auth-card" style="max-width: 500px">
+      <div class="auth-header">
+        <a href="/" class="logo">
+          <div class="logo-icon">🎓</div>
+          <span>EduFocus</span>
+        </a>
+        <h1 class="auth-title">Ro'yxatdan O'tish</h1>
+        <p class="auth-subtitle">O'qituvchi sifatida ro'yxatdan o'ting</p>
+      </div>
+
+      <div id="error-msg" class="form-error"></div>
+
+      <form id="register-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="name">Ism</label>
+            <input type="text" id="name" class="form-input" placeholder="Ismoil" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="surname">Familiya</label>
+            <input type="text" id="surname" class="form-input" placeholder="Karimov" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="email">Email</label>
+          <div class="input-icon-wrap">
+            <span class="input-icon">📧</span>
+            <input type="email" id="email" class="form-input" placeholder="sizning@email.com" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="phone">Telefon raqam</label>
+          <div class="input-icon-wrap">
+            <span class="input-icon">📱</span>
+            <input type="tel" id="phone" class="form-input" placeholder="+998 90 123 45 67" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="school">Universitet / Maktab nomi</label>
+          <div class="input-icon-wrap">
+            <span class="input-icon">🏫</span>
+            <input type="text" id="school" class="form-input" placeholder="Toshkent axborot texnologiyalari universiteti" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="subject">Fan (predmet)</label>
+          <div class="input-icon-wrap">
+            <span class="input-icon">📚</span>
+            <input type="text" id="subject" class="form-input" placeholder="Matematika">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="password">Parol</label>
+            <input type="password" id="password" class="form-input" placeholder="••••••••" required minlength="6">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="password2">Tasdiqlash</label>
+            <input type="password" id="password2" class="form-input" placeholder="••••••••" required minlength="6">
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg" style="width: 100%" id="register-btn">
+          Ro'yxatdan o'tish
+        </button>
+      </form>
+
+      <div class="form-footer">
+        Allaqachon hisobingiz bormi? <a href="/login.html">Kirish</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Check if already logged in
+    const token = localStorage.getItem('edufocus_token');
+    if (token) {
+      window.location.href = '/dashboard.html';
+    }
+
+    const form = document.getElementById('register-form');
+    const errorMsg = document.getElementById('error-msg');
+    const registerBtn = document.getElementById('register-btn');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorMsg.style.display = 'none';
+
+      const password = document.getElementById('password').value;
+      const password2 = document.getElementById('password2').value;
+
+      if (password !== password2) {
+        errorMsg.textContent = 'Parollar mos kelmaydi';
+        errorMsg.style.display = 'block';
+        return;
+      }
+
+      if (password.length < 6) {
+        errorMsg.textContent = 'Parol kamida 6 ta belgidan iborat bo\'lishi kerak';
+        errorMsg.style.display = 'block';
+        return;
+      }
+
+      const body = {
+        name: document.getElementById('name').value,
+        surname: document.getElementById('surname').value,
+        email: document.getElementById('email').value,
+        phone: document.getElementById('phone').value,
+        school: document.getElementById('school').value,
+        subject: document.getElementById('subject').value,
+        password
+      };
+
+      registerBtn.disabled = true;
+      registerBtn.innerHTML = '<div class="spinner"></div> Ro\'yxatdan o\'tish...';
+
+      try {
+        const res = await fetch('/api/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          localStorage.setItem('edufocus_token', data.token);
+          localStorage.setItem('edufocus_teacher', JSON.stringify(data.teacher));
+          window.location.href = '/dashboard.html';
+        } else {
+          errorMsg.textContent = data.error || 'Ro\'yxatdan o\'tish xatosi';
+          errorMsg.style.display = 'block';
+        }
+      } catch (err) {
+        errorMsg.textContent = 'Server bilan aloqa uzildi';
+        errorMsg.style.display = 'block';
+      } finally {
+        registerBtn.disabled = false;
+        registerBtn.innerHTML = 'Ro\'yxatdan o\'tish';
+      }
+    });
+  </script>
+</body>
+</html>
