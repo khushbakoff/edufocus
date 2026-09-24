@@ -1,13 +1,16 @@
 // EduFocus Service Worker
-const CACHE_NAME = 'edufocus-v1';
+const CACHE_NAME = 'edufocus-v2';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
   '/student.html',
+  '/app.html',
   '/login.html',
   '/register.html',
   '/dashboard.html',
   '/css/style.css',
+  '/css/mobile-app.css',
+  '/js/html5-qrcode.min.js',
   '/manifest.json',
   '/img/icon-192.png',
   '/img/icon-512.png'

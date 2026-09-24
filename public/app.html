@@ -61,9 +61,14 @@
         Dars vaqtida diqqatni jamlash, jonli testlarni topshirish va interaktiv materiallarni ko'rish uchun maxsus ilova.
       </p>
 
-      <button type="button" id="main-install-btn" class="mobile-btn-lime" onclick="triggerInstall()" style="font-size: 16px">
-        <span>📲</span> Telefonga O'rnatish (1-klik)
-      </button>
+      <div style="display: flex; flex-direction: column; gap: 10px">
+        <a href="/student.html?action=scan" class="mobile-btn-lime" style="text-decoration: none; font-size: 16px; box-shadow: 0 8px 24px rgba(212, 246, 55, 0.45)">
+          <span>📷</span> QR Kodni Skanerlash
+        </a>
+        <button type="button" id="main-install-btn" class="hero-balance-pill-btn" onclick="triggerInstall()" style="font-size: 15px">
+          <span>📲</span> Telefonga O'rnatish (1-klik)
+        </button>
+      </div>
     </div>
 
     <!-- Quick Session Code Form -->
@@ -74,9 +79,14 @@
       </div>
       <form onsubmit="goToClass(event)">
         <input type="text" id="class-code-input" class="mobile-input-field" placeholder="8 xonali dars kodi (masalan: 44275fc5)" required>
-        <button type="submit" class="mobile-btn-dark">
-          Darsga Kirish 🚀
-        </button>
+        <div style="display: flex; gap: 8px">
+          <button type="submit" class="mobile-btn-dark" style="flex: 1">
+            Darsga Kirish 🚀
+          </button>
+          <a href="/student.html?action=scan" class="mobile-btn-dark" style="width: auto; padding: 16px 20px; text-decoration: none; background: #F3F4F6; color: var(--app-dark)" title="QR Skaner">
+            📷
+          </a>
+        </div>
       </form>
     </div>
 

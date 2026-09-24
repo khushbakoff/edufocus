@@ -13,6 +13,7 @@
   <link rel="icon" href="/img/icon-192.png">
   <link rel="stylesheet" href="/css/mobile-app.css">
   <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/html5-qrcode.min.js"></script>
   <style>
     html, body {
       overscroll-behavior: none;
@@ -64,9 +65,14 @@
         <p style="font-size: 13px; color: var(--app-text-secondary); margin-bottom: 16px" id="session-info">
           Darsga ulanish uchun quyidagi tugmani bosing
         </p>
-        <button type="button" class="hero-balance-pill-btn" onclick="openJoinSheet()" id="hero-join-action-btn">
-          <span>🚀</span> Darsga Kirish
-        </button>
+        <div style="display: flex; flex-direction: column; gap: 10px">
+          <button type="button" class="mobile-btn-lime" onclick="openQRScanner()" id="hero-scan-btn" style="box-shadow: 0 8px 24px rgba(212, 246, 55, 0.45)">
+            <span style="font-size: 18px">📷</span> QR Kodni Skanerlash
+          </button>
+          <button type="button" class="hero-balance-pill-btn" onclick="openJoinSheet()" id="hero-join-action-btn">
+            <span>✍️</span> Kod / Ism Bilan Kirish
+          </button>
+        </div>
       </div>
 
       <!-- Your Cards Section (Ronas IT iconic horizontal carousel) -->
@@ -131,6 +137,16 @@
       </div>
 
       <div class="action-list-card">
+        <!-- Action 0: Scan QR Code -->
+        <div class="action-row-item" onclick="openQRScanner()" style="background: rgba(212, 246, 55, 0.1); border-radius: var(--app-radius-md)">
+          <div class="action-icon-box" style="background: var(--app-lime); color: var(--app-dark); font-size: 22px">📷</div>
+          <div class="action-content-wrap">
+            <div class="action-item-title" style="color: var(--app-dark)">QR Kodni Skanerlash</div>
+            <div class="action-item-subtitle">Doska yoki monitordagi QR kodni o'qish</div>
+          </div>
+          <span class="action-chevron" style="color: var(--app-dark)">›</span>
+        </div>
+
         <!-- Action 1: Install PWA -->
         <div class="action-row-item" onclick="triggerPWAInstall()">
           <div class="action-icon-box lime">📲</div>
@@ -280,6 +296,10 @@
         <span class="nav-tab-icon">🏠</span>
         <span class="nav-tab-label">Dars</span>
       </button>
+      <button class="nav-tab-btn" onclick="openQRScanner()" id="tab-nav-scan">
+        <span class="nav-tab-icon" style="color: #059669">📷</span>
+        <span class="nav-tab-label">Skaner</span>
+      </button>
       <button class="nav-tab-btn" onclick="openStudentQuizIfAvailable()" id="tab-nav-quiz">
         <span class="nav-tab-icon">📝</span>
         <span class="nav-tab-label">Test</span>
@@ -327,7 +347,11 @@
           Darsga Kirish 🚀
         </button>
 
-        <button type="button" class="mobile-btn-dark" style="background: #F3F4F6; color: var(--app-dark)" onclick="closeJoinSheet()">
+        <button type="button" class="mobile-btn-dark" style="background: #F3F4F6; color: var(--app-dark); margin-bottom: 10px" onclick="closeJoinSheet(); openQRScanner();">
+          <span>📷</span> QR Kodni Kamera Bilan Skanerlash
+        </button>
+
+        <button type="button" class="mobile-btn-dark" style="background: transparent; color: var(--app-text-secondary); border: 1px solid var(--app-border)" onclick="closeJoinSheet()">
           Bekor Qilish
         </button>
       </form>
@@ -457,6 +481,50 @@
         Yopish
       </button>
     </div>
+  <!-- ============================================ -->
+  <!-- FULLSCREEN IN-APP QR CODE CAMERA SCANNER     -->
+  <!-- ============================================ -->
+  <div id="qr-scanner-modal" class="qr-scanner-fullscreen" style="display: none">
+    <!-- Top Bar -->
+    <div class="scanner-top-bar">
+      <div class="scanner-pill-badge">
+        <div class="dot"></div>
+        <span>Kamera Faol</span>
+      </div>
+      <button type="button" class="scanner-close-btn" onclick="closeQRScanner()" title="Yopish">
+        ✕
+      </button>
+    </div>
+
+    <!-- Camera Viewport Box with Ronas IT Lime Frame -->
+    <div class="scanner-camera-container">
+      <div id="qr-reader"></div>
+      <div class="scanner-frame-overlay">
+        <div class="scanner-corner corner-tl"></div>
+        <div class="scanner-corner corner-tr"></div>
+        <div class="scanner-corner corner-bl"></div>
+        <div class="scanner-corner corner-br"></div>
+        <div class="scanner-laser-line"></div>
+      </div>
+    </div>
+
+    <!-- Bottom Instructions & Controls -->
+    <div class="scanner-bottom-controls">
+      <div class="scanner-hint-text" id="scanner-hint">
+        Kamerani ustoz monitori yoki doskadagi QR kodga qarating
+      </div>
+      <div class="scanner-action-buttons-row">
+        <button type="button" class="scanner-sub-btn" id="scanner-torch-btn" onclick="toggleScannerTorch()">
+          <span>🔦</span> Chiroq
+        </button>
+        <button type="button" class="scanner-sub-btn" onclick="toggleCameraFacing()">
+          <span>🔄</span> Kamera
+        </button>
+      </div>
+      <button type="button" class="scanner-sub-btn" style="width: 100%; max-width: 380px; background: rgba(212, 246, 55, 0.15); border-color: var(--app-lime); color: var(--app-lime)" onclick="closeQRScanner(); openJoinSheet();">
+        ✍️ Kodni qo'lda kiritish
+      </button>
+    </div>
   </div>
 
   <!-- ============================================ -->
@@ -482,12 +550,19 @@
     // ============================================
     const urlParams = new URLSearchParams(window.location.search);
     let sessionId = urlParams.get('session');
+    const actionParam = urlParams.get('action');
 
     if (!sessionId) {
       const manualGroup = document.getElementById('manual-session-group');
       if (manualGroup) manualGroup.style.display = 'block';
       const infoEl = document.getElementById('session-info');
-      if (infoEl) infoEl.textContent = 'Dars kodi va ismingizni kiriting';
+      if (infoEl) infoEl.textContent = 'QR kodni skanerlang yoki kodni kiriting';
+
+      if (actionParam === 'scan') {
+        setTimeout(() => {
+          openQRScanner();
+        }, 300);
+      }
     } else {
       loadSessionInfo();
     }
@@ -1056,6 +1131,152 @@
     function closeStudentMaterial() {
       const modal = document.getElementById('student-material-modal');
       if (modal) modal.classList.remove('active');
+    }
+
+    // ============================================
+    // IN-APP CAMERA QR SCANNER LOGIC
+    // ============================================
+    let html5QrScanner = null;
+    let currentCameraFacing = 'environment';
+    let isTorchOn = false;
+
+    async function openQRScanner() {
+      const modal = document.getElementById('qr-scanner-modal');
+      if (modal) modal.style.display = 'flex';
+
+      const hintEl = document.getElementById('scanner-hint');
+      if (hintEl) hintEl.textContent = 'Kamerani ustoz doskasidagi QR kodga qarating';
+
+      try {
+        if (!html5QrScanner) {
+          html5QrScanner = new Html5Qrcode("qr-reader");
+        }
+
+        const config = {
+          fps: 15,
+          qrbox: { width: 250, height: 250 },
+          aspectRatio: 1.0
+        };
+
+        await html5QrScanner.start(
+          { facingMode: currentCameraFacing },
+          config,
+          onScanSuccess,
+          onScanFailure
+        );
+      } catch (err) {
+        console.error('Camera start error:', err);
+        const hintEl = document.getElementById('scanner-hint');
+        if (hintEl) {
+          hintEl.textContent = 'Kameraga ruxsat berilmadi yoki kamera band. Kodni qo\'lda kiriting.';
+          hintEl.style.color = '#EF4444';
+        }
+      }
+    }
+
+    async function closeQRScanner() {
+      const modal = document.getElementById('qr-scanner-modal');
+      if (modal) modal.style.display = 'none';
+
+      if (html5QrScanner && html5QrScanner.isScanning) {
+        try {
+          await html5QrScanner.stop();
+        } catch (e) {
+          console.log('Error stopping scanner:', e);
+        }
+      }
+    }
+
+    function onScanFailure(error) {
+      // Ignored - frame didn't contain QR
+    }
+
+    function extractSessionIdFromQR(qrText) {
+      if (!qrText) return null;
+      qrText = qrText.trim();
+
+      // Check if text is URL containing ?session= or &session=
+      if (qrText.includes('session=')) {
+        try {
+          const urlObj = new URL(qrText.startsWith('http') ? qrText : 'https://dummy.uz/' + qrText);
+          const s = urlObj.searchParams.get('session');
+          if (s) return s.trim();
+        } catch (e) {}
+      }
+
+      // Check if it's in format: session:1234abcd or code:1234abcd
+      const match = qrText.match(/(?:session|code)[:=\/]([a-zA-Z0-9_-]+)/i);
+      if (match) return match[1];
+
+      // Otherwise if it's alphanumeric up to 36 chars
+      if (/^[a-zA-Z0-9_-]{4,36}$/.test(qrText)) {
+        return qrText;
+      }
+
+      return qrText;
+    }
+
+    async function onScanSuccess(decodedText, decodedResult) {
+      console.log('QR Code detected:', decodedText);
+
+      // Haptic feedback
+      if (navigator.vibrate) {
+        navigator.vibrate([100, 50, 100]);
+      }
+
+      // Stop camera
+      await closeQRScanner();
+
+      const extractedSession = extractSessionIdFromQR(decodedText);
+      if (extractedSession) {
+        sessionId = extractedSession;
+        const codeInput = document.getElementById('manual-session-code');
+        if (codeInput) codeInput.value = extractedSession;
+
+        // Update URL without page reload
+        const newUrl = new URL(window.location);
+        newUrl.searchParams.set('session', extractedSession);
+        window.history.replaceState({}, '', newUrl);
+
+        // Load session metadata from server
+        loadSessionInfo();
+
+        // Prompt join sheet
+        openJoinSheet();
+
+        const studentInput = document.getElementById('student-name');
+        if (studentInput) {
+          studentInput.focus();
+        }
+      } else {
+        alert('QR koddan sessiya kodi topilmadi. Qayta urinib ko\'ring.');
+      }
+    }
+
+    async function toggleCameraFacing() {
+      currentCameraFacing = (currentCameraFacing === 'environment') ? 'user' : 'environment';
+      if (html5QrScanner && html5QrScanner.isScanning) {
+        await html5QrScanner.stop();
+        await openQRScanner();
+      }
+    }
+
+    async function toggleScannerTorch() {
+      try {
+        if (html5QrScanner && html5QrScanner.isScanning) {
+          isTorchOn = !isTorchOn;
+          await html5QrScanner.applyVideoConstraints({
+            advanced: [{ torch: isTorchOn }]
+          });
+          const torchBtn = document.getElementById('scanner-torch-btn');
+          if (torchBtn) {
+            torchBtn.style.background = isTorchOn ? 'var(--app-lime)' : 'rgba(255,255,255,0.1)';
+            torchBtn.style.color = isTorchOn ? 'var(--app-dark)' : '#FFFFFF';
+          }
+        }
+      } catch (e) {
+        alert('Ushbu qurilmada chiroqni dasturiy boshqarish qo\'llab-quvvatlanmaydi.');
+      }
     }
   </script>
 </body>
