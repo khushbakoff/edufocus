@@ -7,8 +7,11 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>EduFocus — Darsga qo'shilish</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#0F172A">
+  <link rel="apple-touch-icon" href="/img/icon-192.png">
   <link rel="stylesheet" href="/css/style.css">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>">
+  <link rel="icon" href="/img/icon-192.png">
   <script src="/socket.io/socket.io.js"></script>
   <style>
     /* Prevent pull-to-refresh */
@@ -58,6 +61,12 @@
         <button type="submit" class="btn btn-primary btn-lg" style="width:100%" id="join-btn">
           Darsga Qo'shilish
         </button>
+
+        <div id="pwa-install-banner" style="display: none; margin-top: 14px">
+          <button type="button" class="btn btn-outline" style="width: 100%; border-color: rgba(59, 130, 246, 0.4); color: var(--blue-400); font-size: 13px" onclick="installPWA()">
+            📲 Ilovani Telefonga O'rnatish
+          </button>
+        </div>
       </form>
     </div>
   </div>
@@ -214,6 +223,36 @@
     let joinTime = null;
     let lockTimerInterval = null;
     let isLocked = true;
+
+    // Service Worker & PWA Install
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
+      });
+    }
+
+    let deferredPrompt = null;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      const banner = document.getElementById('pwa-install-banner');
+      if (banner) banner.style.display = 'block';
+    });
+
+    function installPWA() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choice) => {
+          if (choice.outcome === 'accepted') {
+            const banner = document.getElementById('pwa-install-banner');
+            if (banner) banner.style.display = 'none';
+          }
+          deferredPrompt = null;
+        });
+      } else {
+        alert('Ilovani o\'rnatish uchun brauzeringiz menyusi (3 nuqta) orqali "Bosh ekranga qo\'shish" (Add to Home Screen) tugmasini bosing.');
+      }
+    }
 
     // ============================================
     // DEVICE DETECTION
